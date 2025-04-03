@@ -12,9 +12,7 @@ yarn dev
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 
-Test dataset
-
-With these adjusted probabilities:
+Test dataset in opensearch:
 
 Gas locking: Will occur approximately once every 2 weeks per pump
 Gas interference: Will occur approximately once per week per pump
@@ -33,10 +31,7 @@ For a 6-month dataset with 5 pumps, you should see roughly:
 ~1-2 shutdown events (across all pumps)
 
 
-
-  
-
+Default
 name: 'Admin User',
 email: 'admin@example.com',
 password: 'admin123',
-

@@ -151,11 +151,14 @@ export async function performAggregation(index: string, params: {
       body: searchBody,
     });
 
-    //console.log('Response:', JSON.stringify(response.body, null, 2));
     
     return response.body.aggregations;
   } catch (error) {
-    console.error('Error performing aggregation:', error);
+
+  
+    console.error('OS: Error performing aggregation:', JSON.stringify(error, null, 2));
+    
+
     throw error;
   }
 }
@@ -163,6 +166,8 @@ export async function performAggregation(index: string, params: {
 // Save annotation to OpenSearch
 export async function indexAnnotationRecord(annotation: Annotation) {
   const annotationIndex = process.env.ANNOTATION_INDEX || 'default_annotation_index';
+
+  console.log('OS: indexAnnotationRecord:', annotation);
   
   try {
     const response = await client.index({

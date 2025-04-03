@@ -30,7 +30,8 @@ export default function AggregationResults({
   onZoomHistory = () => {}
 }: AggregationResultsProps) {
 
-  const { startDate, endDate } = useFormState();
+  const { startDate, endDate, interval } = useFormState();
+ 
 
   const [viewMode, setViewMode] = useState<'chart' | 'summary'>('chart');
   const [showAnnotationSidebar, setShowAnnotationSidebar] = useState(false);
@@ -173,7 +174,7 @@ export default function AggregationResults({
     if (onDateRangeChange) {
       onDateRangeChange(newStart.toISOString(), newEnd.toISOString());
     } 
-    
+
 
 
   }
@@ -354,6 +355,7 @@ export default function AggregationResults({
           onZoomOut={handleZoomOut}
           onNavigateLeft={handleNavigateLeft}
           onNavigateRight={handleNavigateRight}
+          currentInterval={interval}
           showBrushControls={hasResults && viewMode === 'chart'}
         />
       }
