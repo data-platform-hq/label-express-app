@@ -110,7 +110,6 @@ export async function performAggregation(index: string, params: {
   filterField: string;
   filterValue: string;
 }) {
-  console.log('OS: performAggregation:', params.startDate, params.endDate);
   try {
     const { timestamp, startDate, endDate, filterField, filterValue } = params;
 
@@ -142,9 +141,6 @@ export async function performAggregation(index: string, params: {
       query: filterQuery,
       aggs,
     };
-
-    // log searchBody as JSON
-    // console.log('Search Body:', JSON.stringify(searchBody, null, 2));
        
     const response = await client.search({
       index,
@@ -166,8 +162,6 @@ export async function performAggregation(index: string, params: {
 // Save annotation to OpenSearch
 export async function indexAnnotationRecord(annotation: Annotation) {
   const annotationIndex = process.env.ANNOTATION_INDEX || 'default_annotation_index';
-
-  console.log('OS: indexAnnotationRecord:', annotation);
   
   try {
     const response = await client.index({
@@ -185,8 +179,6 @@ export async function indexAnnotationRecord(annotation: Annotation) {
 // Load annotations from OpenSearch
 export async function searchAnnotationRecords(startDate: string, endDate: string, filterField: string, filterValue: string) {
   const annotationIndex = process.env.ANNOTATION_INDEX || 'default_annotation_index';  
-
-  console.log('OS: searchAnnotationRecords:', startDate, endDate);
  
   try {
 

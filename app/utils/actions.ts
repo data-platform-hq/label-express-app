@@ -76,8 +76,6 @@ export async function fetchIndexStats(index: string, timestamp: string, filterFi
 
 export async function saveAnnotationRecord(annotation: Annotation) {
 
-  console.log('saveAnnotationRecord', annotation);
-
   try {
     return await indexAnnotationRecord(annotation);
   }
