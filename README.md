@@ -12,16 +12,16 @@ yarn dev
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## OS with NO security
-docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "DISABLE_INSTALL_DEMO_CONFIG=true" -e "DISABLE_SECURITY_PLUGIN=true"  -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=Alexi@5we%6" opensearchproject/opensearch:latest
+```docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "DISABLE_INSTALL_DEMO_CONFIG=true" -e "DISABLE_SECURITY_PLUGIN=true"  -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=Alexi@5we%6" opensearchproject/opensearch:latest```
 
 ## Postgres
-docker run --name postgres -e POSTGRES_PASSWORD=mysecretpassword -v postgres_data:/var/lib/postgresql/data -p 5432:5432 -d postgres
+```docker run --name postgres -e POSTGRES_PASSWORD=mysecretpassword -v postgres_data:/var/lib/postgresql/data -p 5432:5432 -d postgres```
 
 
 
 
 ## Generate data
-Use python_scripts/esp with issues and annotations.py to generate data
+Use ```python_scripts/esp with issues and annotations.py``` to generate data
 
 
 ### Test dataset in opensearch:
