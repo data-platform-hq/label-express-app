@@ -339,7 +339,7 @@ export function drawAnnotations(
   const fallbackColor = 'rgba(108, 117, 125, 0.3)';
 
   ctx.save();
-  ctx.globalAlpha = 0.8;
+  ctx.globalAlpha = 0.1;
   
   annotations.forEach(annotation => {
     if (annotation.deleted) return; // Skip deleted annotations

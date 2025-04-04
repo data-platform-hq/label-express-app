@@ -4,8 +4,8 @@ import { BrushMode } from '@/app/components/types';
 
 interface ViewControlsProps {
   // View mode props
-  viewMode: 'chart' | 'summary';
-  setViewMode: (mode: 'chart' | 'summary') => void;
+  viewMode: 'chart' | 'annotation';
+  setViewMode: (mode: 'chart' | 'annotation') => void;
   showAnnotationSidebar: boolean;
   setShowAnnotationSidebar: (show: boolean) => void;
   
@@ -211,12 +211,12 @@ export default function ViewControls({
             Chart
           </button>
           <button
-            onClick={() => setViewMode('summary')}
+            onClick={() => setViewMode('annotation')}
             className={`px-3 py-1 rounded text-xs ${
-              viewMode === 'summary' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+              viewMode === 'annotation' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
             }`}
           >
-            Summary
+            Annotation Details
           </button>
           <button
             onClick={() => setShowAnnotationSidebar(!showAnnotationSidebar)}

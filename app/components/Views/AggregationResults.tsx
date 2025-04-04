@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { TimePoint, AggregationParams } from '@/app/components/types';
 import ChartView from '@/app/components/Chart/ChartView';
-import SummaryStatistics from '@/app/components/Views/SummaryStatistics';
+import AnnotationDetails from '@/app/components/Views/AnnotationDetails';
 import AnnotationSidebar from '@/app/components/Annotations/AnnotationSidebar';
 import AnnotationPopup from '@/app/components/Annotations/AnnotationPopup';
 import ResultsView from '@/app/components/Views/ResultsView';
@@ -33,7 +33,7 @@ export default function AggregationResults({
   const { startDate, endDate, interval } = useFormState();
  
 
-  const [viewMode, setViewMode] = useState<'chart' | 'summary'>('chart');
+  const [viewMode, setViewMode] = useState<'chart' | 'annotation'>('chart');
   const [showAnnotationSidebar, setShowAnnotationSidebar] = useState(false);
   const [showAnnotationPopup, setShowAnnotationPopup] = useState(false);
 
@@ -51,6 +51,9 @@ export default function AggregationResults({
 
   // Add a state for tracking loading of new annotations
   const [isLoadingNewAnnotation, setIsLoadingNewAnnotation] = useState(false);
+
+  // Add this state near your other state declarations
+  const [selectedAnnotation, setSelectedAnnotation] = useState<any | null>(null);
   
   // Use custom hooks to extract terms and color scale
   const { uniqueTerms, colorScale } = useDataProcessor(results || []);
@@ -184,6 +187,9 @@ export default function AggregationResults({
   const handleNavigateAnnotation = useCallback((annotation: any) => {
     // Set flag that we're navigating to an annotation
     setIsNavigatingToAnnotation(true);
+
+    // Store the selected annotation
+    setSelectedAnnotation(annotation);
 
     const startDate = new Date(annotation.startDate);
     const endDate = new Date(annotation.endDate);
@@ -373,9 +379,10 @@ export default function AggregationResults({
               onZoomHistory={handleZoomHistory}
             />
           ) : (
-            <SummaryStatistics 
+            <AnnotationDetails 
               results={results} 
               uniqueTerms={uniqueTerms} 
+              selectedAnnotation={selectedAnnotation}
             />
           )
       }

@@ -135,7 +135,7 @@ export default function TimeSeriesChart({
     // Draw data lines
     drawDataLines(ctx, chartData, scales, colorScale, visibleLines);
 
-    // // Add this to your main rendering effect in TimeSeriesChart.tsx
+   
     // // Debug outline to see canvas boundaries
     // ctx.strokeStyle = 'red';
     // ctx.lineWidth = 1;

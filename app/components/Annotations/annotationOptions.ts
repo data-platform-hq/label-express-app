@@ -28,7 +28,7 @@ export const annotationTypeOptions = [
     label: string;
   }
   
-  // You can also add helper functions
+  // helper functions
   export function getOptionLabel(options: OptionType[], value: string): string {
     const option = options.find(opt => opt.value === value);
     return option ? option.label : value;

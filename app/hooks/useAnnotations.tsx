@@ -5,6 +5,7 @@ import { Annotation } from '@/app/components/types';
 import { fetchAnnotationRecords, removeAnnotationRecord } from '@/app/utils/actions';
 import { useFormState } from '@/app/contexts/FormStateContext';
 import * as d3 from 'd3';
+import { stat } from 'fs';
 
 interface UseAnnotationsResult {
   annotations: Annotation[];
@@ -115,6 +116,9 @@ export function useAnnotations(): UseAnnotationsResult {
         indicator: a.indicator,
         recommendation: a.recommendation,
         color: getColorForAnnotationType(a.annotationType || 'default'), 
+        createdBy: a.createdBy,
+        createdAt: a.createdAt,
+        status: a.status,
       }));
       
       setAnnotations(processedAnnotations);

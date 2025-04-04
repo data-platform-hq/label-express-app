@@ -37,8 +37,6 @@ export async function fetchAggregationData(
   if (!index || !term || !interval || !numericField || !timestamp || !startDate || !endDate || !filterField || !filterValue) {
     return { error: 'Missing required parameters' };
   }
-
-  console.error('fetchAggregationData', startDate, endDate);
   
   try {
 
@@ -87,8 +85,6 @@ export async function saveAnnotationRecord(annotation: Annotation) {
 
 export async function fetchAnnotationRecords(startDate: string, endDate: string, filterField: string, filterValue: string) {
   try {
-
-    console.error('fetchAnnotationRecords', startDate, endDate);
 
     return await searchAnnotationRecords(startDate, endDate, filterField, filterValue);
 
