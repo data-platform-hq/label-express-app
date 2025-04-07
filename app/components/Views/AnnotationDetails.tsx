@@ -1,75 +1,111 @@
 // components/AnnotationDetails.tsx
-import { TimePoint } from '@/app/components/types';
+'use client';
+
+import { AnnotationStatus } from '@/app/components/types';
 
 interface AnnotationDetailsProps {
-  results: TimePoint[];
-  uniqueTerms: string[];
   selectedAnnotation?: any | null;
+  userRole?: string;
+  onApprovalComplete?: () => void;
 }
 
-export default function AnnotationDetails({ results, uniqueTerms, selectedAnnotation }: AnnotationDetailsProps) {
-  return (
-    <div className="px-4 py-5 sm:p-6">
-         {/* Show annotation details if one is selected */}
-         {selectedAnnotation && (
-        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex justify-between items-start">
-            <h3 className="text-lg font-semibold text-blue-800">
-              Selected Annotation
-            </h3>
-
-          </div>
-          
-          <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Time Range:</p>
-              <p className="font-medium">
-                {new Date(selectedAnnotation.startDate).toLocaleString()} - {new Date(selectedAnnotation.endDate).toLocaleString()}
-              </p>
-            </div>
-            
-            <div>
-              <p className="text-sm text-gray-600">Type:</p>
-              <p className="font-medium">{selectedAnnotation.annotationType}</p>
-            </div>
-            
-            <div className="md:col-span-2">
-              <p className="text-sm text-gray-600">Description:</p>
-              <p className="font-medium">{selectedAnnotation.description}</p>
-            </div>
-            
-            {selectedAnnotation.indicator && (
-              <div>
-                <p className="text-sm text-gray-600">Indicator:</p>
-                <p className="font-medium">{selectedAnnotation.indicator}</p>
-              </div>
-            )}
-            
-            {selectedAnnotation.recommendation && (
-              <div className="md:col-span-2">
-                <p className="text-sm text-gray-600">Recommendation:</p>
-                <p className="font-medium">{selectedAnnotation.recommendation}</p>
-              </div>
-            )}
-            
-            <div>
-              <p className="text-sm text-gray-600">Created By:</p>
-              <p className="font-medium">{selectedAnnotation.createdBy}</p>
-            </div>
-            
-            <div>
-              <p className="text-sm text-gray-600">Created At:</p>
-              <p className="font-medium">{new Date(selectedAnnotation.createdAt).toLocaleString()}</p>
-            </div>
-          </div>
-          
-          <div className="mt-4 pt-2 border-t border-blue-200">
-            <h4 className="font-medium text-blue-800 mb-2">Statistics for this time period:</h4>
-            {/* You can add specific statistics for the annotation time period here */}
-          </div>
+export default function AnnotationDetails({ 
+  selectedAnnotation,
+  userRole,
+  onApprovalComplete
+}: AnnotationDetailsProps) {
+  
+  const isApprover = userRole === "admin";
+  
+  if (!selectedAnnotation) return null;
+  
+  // Function to handle approval actions
+  const handleApproval = async (annotationId: string, action: Extract<AnnotationStatus, 'approved' | 'rejected'>) => {
+    try {
+      const response = await fetch(`/api/annotations/${annotationId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: action }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Success:', data);
+      
+      // Call the callback if provided
+      if (onApprovalComplete) {
+        onApprovalComplete();
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+  
+  return ( 
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md ">
+        {/* All details in a single row with flex layout */}
+        <div className="whitespace-nowrap">
+          <span className="text-gray-700">Indicator:</span>{' '}
+          <span className="font-semibold">{selectedAnnotation.indicator || 'N/A'}</span>
         </div>
-      )}
+        
+        <div className="whitespace-nowrap">
+          <span className="text-gray-700">Type:</span>{' '}
+          <span className="font-semibold">{selectedAnnotation.annotationType || 'N/A'}</span>
+        </div>
 
-    </div>
+        <div className="whitespace-nowrap">
+          <span className="text-gray-700">Recommendation:</span>{' '}
+          <span className="font-semibold">{selectedAnnotation.recommendation || 'N/A'}</span>
+        </div>
+        
+        {/* Status badge */}
+        <div className="whitespace-nowrap">
+          <span className="text-gray-700">Status:</span>{' '}
+          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(selectedAnnotation.status)}`}>
+            {selectedAnnotation.status || 'Unknown'}
+          </span>
+        </div>
+        
+        {/* Approval actions for approvers - pushed to the right */}
+        {isApprover && selectedAnnotation.status === 'created' && (
+          <div className="ml-auto flex space-x-2">
+            <button 
+              className="px-2 py-0.5 bg-green-600 text-white rounded hover:bg-green-700 text-xs"
+              onClick={() => handleApproval(selectedAnnotation.id, 'approved')}
+            >
+              Approve
+            </button>
+            <button 
+              className="px-2 py-0.5 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
+              onClick={() => handleApproval(selectedAnnotation.id, 'rejected')}
+            >
+              Reject
+            </button>
+          </div>
+        )}
+      </div>
+
   );
+}
+
+// Helper function to get status color
+function getStatusColor(status: AnnotationStatus | string): string {
+  switch (status as AnnotationStatus) {
+    case 'approved':
+      return 'bg-green-100 text-green-800';
+    case 'rejected':
+      return 'bg-red-100 text-red-800';
+    case 'created':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'deleted':
+      return 'bg-gray-100 text-gray-500';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
 }

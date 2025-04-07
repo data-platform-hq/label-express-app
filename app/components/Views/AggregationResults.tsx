@@ -6,13 +6,13 @@ import ChartView from '@/app/components/Chart/ChartView';
 import AnnotationDetails from '@/app/components/Views/AnnotationDetails';
 import AnnotationSidebar from '@/app/components/Annotations/AnnotationSidebar';
 import AnnotationPopup from '@/app/components/Annotations/AnnotationPopup';
-import ResultsView from '@/app/components/Views/ResultsView';
 import ViewControls from '@/app/components/Views/ViewControls';
 import VisualizationLayout from '@/app/components/Views/VisualizationLayout';
 import { useDataProcessor } from '@/app/components/Chart/DataProcessor';
 import { useBrushInteraction } from '@/app/components/Chart/useBrushInteraction';
 import { useAnnotations } from '@/app/hooks/useAnnotations';
 import { useFormState } from '@/app/contexts/FormStateContext';
+import { useSession } from 'next-auth/react';
 
 
 
@@ -29,6 +29,8 @@ export default function AggregationResults({
   onDateRangeChange,
   onZoomHistory = () => {}
 }: AggregationResultsProps) {
+
+  const { data: session } = useSession();
 
   const { startDate, endDate, interval } = useFormState();
  
@@ -332,8 +334,6 @@ export default function AggregationResults({
     return 15 * 60 * 1000; // default to 15 minutes
   };
 
-  const hasResults = Array.isArray(results) && results.length > 0;
-
   return (
     <VisualizationLayout
       showAnnotationSidebar={showAnnotationSidebar}
@@ -362,34 +362,26 @@ export default function AggregationResults({
           onNavigateLeft={handleNavigateLeft}
           onNavigateRight={handleNavigateRight}
           currentInterval={interval}
-          showBrushControls={hasResults && viewMode === 'chart'}
+          showBrushControls={true}
         />
       }
       mainContent={
-          viewMode === 'chart' ? (
-            <ChartView
-              results={results}
-              uniqueTerms={uniqueTerms}
-              colorScale={colorScale}
-              params={params}
-              brushMode={brushMode}
-              setBrushMode={setBrushMode}
-              onBrushEnd={handleBrushEnd}
-              annotations={annotations} // Use current annotations for the chart
-              onZoomHistory={handleZoomHistory}
-            />
-          ) : (
-            <AnnotationDetails 
-              results={results} 
-              uniqueTerms={uniqueTerms} 
-              selectedAnnotation={selectedAnnotation}
-            />
-          )
+        <ChartView
+          results={results}
+          uniqueTerms={uniqueTerms}
+          colorScale={colorScale}
+          params={params}
+          brushMode={brushMode}
+          setBrushMode={setBrushMode}
+          onBrushEnd={handleBrushEnd}
+          annotations={annotations} // Use current annotations for the chart
+          onZoomHistory={handleZoomHistory}
+      />
       }
       footerContent={
-        <ResultsView 
-          params={params} 
-          results={results || []}
+        <AnnotationDetails 
+          selectedAnnotation={selectedAnnotation}
+          userRole={session?.user?.role}
         />
       }
       popupContent={
