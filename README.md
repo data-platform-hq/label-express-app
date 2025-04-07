@@ -47,3 +47,85 @@ Default user
 name: 'Admin User',
 email: 'admin@example.com',
 password: 'admin123',
+
+
+app
+ ┣ admin
+ ┃ ┣ users
+ ┃ ┃ ┗ page.tsx
+ ┃ ┗ layout.tsx
+ ┣ api
+ ┃ ┣ admin
+ ┃ ┃ ┗ users
+ ┃ ┃ ┃ ┣ [id]
+ ┃ ┃ ┃ ┃ ┗ route.ts
+ ┃ ┃ ┃ ┗ route.ts
+ ┃ ┗ auth
+ ┃ ┃ ┣ [...nextauth]
+ ┃ ┃ ┃ ┗ route.ts
+ ┃ ┃ ┗ register
+ ┃ ┃ ┃ ┗ route.ts
+ ┣ auth
+ ┃ ┗ signin
+ ┃ ┃ ┗ page.tsx
+ ┣ components
+ ┃ ┣ Annotations
+ ┃ ┃ ┣ AnnotationForm.tsx
+ ┃ ┃ ┣ AnnotationPopup.tsx
+ ┃ ┃ ┣ AnnotationSidebar.tsx
+ ┃ ┃ ┗ annotationOptions.ts
+ ┃ ┣ Auth
+ ┃ ┃ ┗ UserMenu.tsx
+ ┃ ┣ Chart
+ ┃ ┃ ┣ BrushModeSelector.tsx
+ ┃ ┃ ┣ ChartBrush.tsx
+ ┃ ┃ ┣ ChartTooltip.tsx
+ ┃ ┃ ┣ ChartTooltipHandler.tsx
+ ┃ ┃ ┣ ChartView.tsx
+ ┃ ┃ ┣ DataProcessor.tsx
+ ┃ ┃ ┣ ScrollableLegend.tsx
+ ┃ ┃ ┣ TimeSeriesChart.tsx
+ ┃ ┃ ┣ chartUtils.ts
+ ┃ ┃ ┗ useBrushInteraction.tsx
+ ┃ ┣ FieldsSelector
+ ┃ ┃ ┣ AggregationForm.tsx
+ ┃ ┃ ┣ DateRangePicker.tsx
+ ┃ ┃ ┣ FieldDropdown.tsx
+ ┃ ┃ ┣ FieldSelector.tsx
+ ┃ ┃ ┣ FilterValueSelector.tsx
+ ┃ ┃ ┣ IndexSelector.tsx
+ ┃ ┃ ┣ IntervalSelector.tsx
+ ┃ ┃ ┣ ResultsDisplay.tsx
+ ┃ ┃ ┗ intervalUtils.ts
+ ┃ ┣ Views
+ ┃ ┃ ┣ AggregationResults.tsx
+ ┃ ┃ ┣ AnnotationDetails.tsx
+ ┃ ┃ ┣ ResultsView.tsx
+ ┃ ┃ ┣ ViewControls.tsx
+ ┃ ┃ ┗ VisualizationLayout.tsx
+ ┃ ┣ Portal.tsx
+ ┃ ┗ types.ts
+ ┣ contexts
+ ┃ ┣ AuthContext.tsx
+ ┃ ┗ FormStateContext.tsx
+ ┣ hooks
+ ┃ ┣ useAggregationData.ts
+ ┃ ┣ useAnnotations.tsx
+ ┃ ┣ useFieldSelectorState.ts
+ ┃ ┣ useFieldsLoader.ts
+ ┃ ┗ useFilterValuesLoader.ts
+ ┣ types
+ ┃ ┗ next-auth.d.ts
+ ┣ unauthorized
+ ┃ ┗ page.tsx
+ ┣ utils
+ ┃ ┗ actions.ts
+ ┣ .DS_Store
+ ┣ favicon.ico
+ ┣ globals.css
+ ┣ layout.tsx
+ ┗ page.tsx
+lib
+ ┣ auth.ts
+ ┗ opensearch.ts
+ 

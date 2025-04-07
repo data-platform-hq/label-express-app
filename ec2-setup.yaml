@@ -1,0 +1,252 @@
+# ec2-setup.yaml
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'EC2 instance for Next.js app with PostgreSQL and OpenSearch'
+
+Parameters:
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: Must be the name of an existing EC2 KeyPair.
+  
+  InstanceType:
+    Description: EC2 instance type
+    Type: String
+    Default: t3.large
+    AllowedValues:
+      - t3.medium
+      - t3.large
+      - t3.xlarge
+      - m5.large
+    ConstraintDescription: Must be a valid EC2 instance type.
+
+  VolumeSize:
+    Description: Size of the EBS volume in GB
+    Type: Number
+    Default: 30
+    MinValue: 20
+    MaxValue: 100
+    ConstraintDescription: Must be between 20 and 100 GB.
+    
+  DeploymentKey:
+    Description: SSH deployment key for GitHub Actions (public key)
+    Type: String
+    NoEcho: true
+
+Resources:
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH, HTTP, and HTTPS
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      SecurityGroups:
+        - !Ref SecurityGroup
+      KeyName: !Ref KeyName
+      ImageId: ami-0c02fb55956c7d316  # Amazon Linux 2 AMI (adjust for your region)
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: !Ref VolumeSize
+            VolumeType: gp3
+            DeleteOnTermination: true
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+          
+          # Update system packages
+          yum update -y
+          
+          # Install Docker
+          yum install -y docker
+          service docker start
+          usermod -a -G docker ec2-user
+          systemctl enable docker
+          
+          # Install Docker Compose
+          curl -L "https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+          
+          # Install git and other tools
+          yum install -y git jq
+          
+          # Create app directory and set permissions
+          mkdir -p /home/ec2-user/app
+          chown -R ec2-user:ec2-user /home/ec2-user/app
+          
+          # Create .ssh directory for the ec2-user if it doesn't exist
+          mkdir -p /home/ec2-user/.ssh
+          
+          # Add the deployment key to authorized_keys
+          echo "${DeploymentKey}" >> /home/ec2-user/.ssh/authorized_keys
+          chmod 600 /home/ec2-user/.ssh/authorized_keys
+          chown -R ec2-user:ec2-user /home/ec2-user/.ssh
+          
+          # Create environment file with secure random passwords
+          cat > /home/ec2-user/app/.env << EOL
+          DB_PASSWORD=$(openssl rand -base64 16 | tr -dc 'a-zA-Z0-9' | head -c 16)
+          OPENSEARCH_PASSWORD=$(openssl rand -base64 16 | tr -dc 'a-zA-Z0-9' | head -c 16)
+          NEXTAUTH_SECRET=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 32)
+          EC2_PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+          EOL
+          
+          chown ec2-user:ec2-user /home/ec2-user/app/.env
+          
+          # Create docker-compose.yml file
+          cat > /home/ec2-user/app/docker-compose.yml << 'EOL'
+          version: '3'
+
+          services:
+            app:
+              build:
+                context: .
+                dockerfile: Dockerfile
+                args:
+                  - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@db:5432/myapp
+                  - OPENSEARCH_URL=https://opensearch:9200
+                  - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+                  - NEXTAUTH_URL=http://${EC2_PUBLIC_IP}
+              restart: always
+              ports:
+                - "80:3000"
+              depends_on:
+                - db
+                - opensearch
+              environment:
+                - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@db:5432/myapp
+                - OPENSEARCH_URL=https://opensearch:9200
+                - OPENSEARCH_USERNAME=admin
+                - OPENSEARCH_PASSWORD=${OPENSEARCH_PASSWORD}
+                - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+                - NEXTAUTH_URL=http://${EC2_PUBLIC_IP}
+                - NODE_ENV=production
+
+            db:
+              image: postgres:14
+              restart: always
+              environment:
+                - POSTGRES_USER=postgres
+                - POSTGRES_PASSWORD=${DB_PASSWORD}
+                - POSTGRES_DB=myapp
+              volumes:
+                - postgres_data:/var/lib/postgresql/data
+
+            opensearch:
+              image: opensearchproject/opensearch:2.4.0
+              restart: always
+              environment:
+                - discovery.type=single-node
+                - bootstrap.memory_lock=true
+                - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+                - "DISABLE_SECURITY_PLUGIN=true"
+              ulimits:
+                memlock:
+                  soft: -1
+                  hard: -1
+              volumes:
+                - opensearch_data:/usr/share/opensearch/data
+
+          volumes:
+            postgres_data:
+            opensearch_data:
+          EOL
+          
+          chown ec2-user:ec2-user /home/ec2-user/app/docker-compose.yml
+          
+          # Create systemd service for Docker Compose
+          cat > /etc/systemd/system/docker-compose-app.service << EOL
+          [Unit]
+          Description=Docker Compose Application Service
+          Requires=docker.service
+          After=docker.service
+          
+          [Service]
+          Type=oneshot
+          RemainAfterExit=yes
+          WorkingDirectory=/home/ec2-user/app
+          ExecStart=/usr/local/bin/docker-compose up -d
+          ExecStop=/usr/local/bin/docker-compose down
+          TimeoutStartSec=0
+          
+          [Install]
+          WantedBy=multi-user.target
+          EOL
+          
+          systemctl enable docker-compose-app.service
+          
+          # Create backup directory and script
+          mkdir -p /home/ec2-user/backups
+          chown -R ec2-user:ec2-user /home/ec2-user/backups
+          
+          cat > /home/ec2-user/app/backup.sh << 'EOL'
+          #!/bin/bash
+          TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+          BACKUP_DIR="/home/ec2-user/backups"
+          
+          # Create backup directory if it doesn't exist
+          mkdir -p $BACKUP_DIR
+          
+          # Backup PostgreSQL
+          docker exec -t app_db_1 pg_dumpall -c -U postgres > $BACKUP_DIR/postgres_$TIMESTAMP.sql
+          
+          # Compress backup
+          gzip $BACKUP_DIR/postgres_$TIMESTAMP.sql
+          
+          # Remove backups older than 7 days
+          find $BACKUP_DIR -name "postgres_*.sql.gz" -type f -mtime +7 -delete
+          EOL
+          
+          chmod +x /home/ec2-user/app/backup.sh
+          chown ec2-user:ec2-user /home/ec2-user/app/backup.sh
+          
+          # Set up cron job for daily backups
+          echo "0 2 * * * /home/ec2-user/app/backup.sh" | crontab -u ec2-user -
+          
+          # Create a deploy script that GitHub Actions will use
+          cat > /home/ec2-user/app/deploy.sh << 'EOL'
+          #!/bin/bash
+          
+          cd /home/ec2-user/app
+          
+          # Pull the latest code
+          git pull
+          
+          # Rebuild and restart the app
+          docker-compose build app
+          docker-compose up -d
+          
+          # Clean up old images
+          docker image prune -f
+          EOL
+          
+          chmod +x /home/ec2-user/app/deploy.sh
+          chown ec2-user:ec2-user /home/ec2-user/app/deploy.sh
+
+Outputs:
+  InstanceId:
+    Description: ID of the EC2 instance
+    Value: !Ref EC2Instance
+  
+  PublicIP:
+    Description: Public IP address of the EC2 instance
+    Value: !GetAtt EC2Instance.PublicIp
+  
+  PublicDNS:
+    Description: Public DNS name of the EC2 instance
+    Value: !GetAtt EC2Instance.PublicDnsName
