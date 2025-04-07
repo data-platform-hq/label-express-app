@@ -280,6 +280,12 @@ export default function AggregationResults({
     }, 1000);
   }, [loadAnnotations, resetBrushSelection]);
 
+  const handleApprovalStatus = (annotationId: any, status: string) => {
+    // Handle approval status change
+    console.log('Handling approval status for annotation:', status);
+  };
+
+
   // Add these functions
   const handleZoomIn = useCallback(() => {
     if (onDateRangeChange) {
@@ -382,6 +388,7 @@ export default function AggregationResults({
         <AnnotationDetails 
           selectedAnnotation={selectedAnnotation}
           userRole={session?.user?.role}
+          onApproval={handleApprovalStatus}
         />
       }
       popupContent={

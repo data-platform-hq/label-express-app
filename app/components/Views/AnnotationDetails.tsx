@@ -6,46 +6,20 @@ import { AnnotationStatus } from '@/app/components/types';
 interface AnnotationDetailsProps {
   selectedAnnotation?: any | null;
   userRole?: string;
-  onApprovalComplete?: () => void;
+  onApproval?: (id: string, status: AnnotationStatus) => void;
 }
 
 export default function AnnotationDetails({ 
   selectedAnnotation,
   userRole,
-  onApprovalComplete
+  onApproval 
 }: AnnotationDetailsProps) {
   
   const isApprover = userRole === "admin";
   
   if (!selectedAnnotation) return null;
   
-  // Function to handle approval actions
-  const handleApproval = async (annotationId: string, action: Extract<AnnotationStatus, 'approved' | 'rejected'>) => {
-    try {
-      const response = await fetch(`/api/annotations/${annotationId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: action }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('Success:', data);
-      
-      // Call the callback if provided
-      if (onApprovalComplete) {
-        onApprovalComplete();
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-  
+
   return ( 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md ">
         {/* All details in a single row with flex layout */}
@@ -77,13 +51,13 @@ export default function AnnotationDetails({
           <div className="ml-auto flex space-x-2">
             <button 
               className="px-2 py-0.5 bg-green-600 text-white rounded hover:bg-green-700 text-xs"
-              onClick={() => handleApproval(selectedAnnotation.id, 'approved')}
+              onClick={() => onApproval && onApproval(selectedAnnotation.id, 'approved')}
             >
               Approve
             </button>
             <button 
               className="px-2 py-0.5 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
-              onClick={() => handleApproval(selectedAnnotation.id, 'rejected')}
+              onClick={() => onApproval && onApproval(selectedAnnotation.id, 'rejected')}
             >
               Reject
             </button>
