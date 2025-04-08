@@ -1,7 +1,7 @@
 // components/FieldSelector.tsx
 "use client";
 
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useFormState } from '@/app/contexts/FormStateContext';
 import { useFieldsLoader } from '@/app/hooks/useFieldsLoader';
 import { useAggregationData } from '@/app/hooks/useAggregationData';
@@ -39,6 +39,10 @@ export default function FieldSelector({ indices }: FieldSelectorProps) {
     resolveInterval
   } = useAggregationData();
 
+  // Keep track of previous valid results and params
+  const [previousValidResults, setPreviousValidResults] = useState<any>(null);
+  const [previousValidParams, setPreviousValidParams] = useState<any>(null);
+  
   // Track whether dates were explicitly changed (not on initial render)
   const datesJustUpdated = useRef(false);
   
@@ -65,6 +69,22 @@ export default function FieldSelector({ indices }: FieldSelectorProps) {
     prevStartDate.current = startDate;
     prevEndDate.current = endDate;
   }, [startDate, endDate, submitCurrentForm]);
+  
+  // Effect to store previous valid results when we have successful data
+  useEffect(() => {
+    if (results && results.processed && results.processed.length > 0 && !error) {
+      setPreviousValidResults(results);
+      setPreviousValidParams({
+        index: selectedIndex,
+        term,
+        interval: resolveInterval(),
+        numericField,
+        timestamp,
+        filterField,
+        filterValue
+      });
+    }
+  }, [results, error, selectedIndex, term, interval, numericField, timestamp, filterField, filterValue, resolveInterval]);
 
   // Handle form submission
   const handleSubmit = useCallback((e: React.FormEvent | any) => {
@@ -77,7 +97,6 @@ export default function FieldSelector({ indices }: FieldSelectorProps) {
       
   // Handle date range changes from chart interactions
   const handleDateRangeChange = useCallback((newStartDate: string, newEndDate: string) => {
-  
     // Flag that we're explicitly updating dates
     datesJustUpdated.current = true;
     
@@ -86,28 +105,38 @@ export default function FieldSelector({ indices }: FieldSelectorProps) {
     setEndDate(newEndDate);
   }, [setStartDate, setEndDate]);
 
+  // Determine if we should use fallback data
+  const shouldUseFallback = error || (results && (!results.processed || results.processed.length === 0)) && previousValidResults !== null;
+  
+  // Determine which results to display
+  const displayResults = shouldUseFallback ? previousValidResults : results;
+  
+  // Determine which params to use
+  const displayParams = shouldUseFallback && previousValidParams ? previousValidParams : {
+    index: selectedIndex,
+    term,
+    interval: resolveInterval(),
+    numericField,
+    timestamp,
+    filterField,
+    filterValue
+  };
+
   return (
     <div className="w-full h-full flex flex-col">
       {/* Results Section */}
       <div className="flex-grow w-full">
         <ResultsDisplay
-          results={results}
+          results={displayResults}
           error={error}
-          params={{
-            index: selectedIndex,
-            term,
-            interval: resolveInterval(),
-            numericField,
-            timestamp,
-            filterField,
-            filterValue
-          }}
+          params={displayParams}
           onDateRangeChange={handleDateRangeChange}
           onZoomHistory={onZoomHistory}
+          usingFallbackData={shouldUseFallback}
         />
       </div>  
-            {/* Configuration Form */}
-            <div className="bg-white rounded-lg shadow-lg border border-gray-200 w-full">
+      {/* Configuration Form */}
+      <div className="bg-white shadow-lg border border-gray-200 w-full">
         <AggregationForm
           indices={indices}
           fields={fields}
