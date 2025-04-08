@@ -34,8 +34,6 @@ export default function AggregationResults({
 
   const { startDate, endDate, interval } = useFormState();
  
-
-  const [viewMode, setViewMode] = useState<'chart' | 'annotation'>('chart');
   const [showAnnotationSidebar, setShowAnnotationSidebar] = useState(false);
   const [showAnnotationPopup, setShowAnnotationPopup] = useState(false);
 
@@ -129,6 +127,12 @@ export default function AggregationResults({
     }
   }, [isLoadingAnnotations, annotations, brushMode, isNavigatingToAnnotation, newAnnotationCreated, annotationList]);
 
+  // Effect to clear selected annotation when sidebar is closed
+  useEffect(() => {
+    if (!showAnnotationSidebar) {
+      setSelectedAnnotation(null);
+    }
+  }, [showAnnotationSidebar]);
 
   // Custom zoom out handler that resets the annotation list
   const handleZoomHistory = useCallback(() => {
@@ -356,8 +360,6 @@ export default function AggregationResults({
       }
       controlsContent={
         <ViewControls
-          viewMode={viewMode}
-          setViewMode={setViewMode}
           showAnnotationSidebar={showAnnotationSidebar}
           setShowAnnotationSidebar={setShowAnnotationSidebar}
           brushMode={brushMode}
@@ -389,6 +391,7 @@ export default function AggregationResults({
           selectedAnnotation={selectedAnnotation}
           userRole={session?.user?.role}
           onApproval={handleApprovalStatus}
+          sidebarOpen={showAnnotationSidebar}
         />
       }
       popupContent={

@@ -36,6 +36,7 @@ interface AggregationFormProps {
     setEndDate: (date: string) => void;
     setFilterField: (value: string) => void;
     setFilterValue: (value: string) => void;
+    resetState: () => void;
   };
   onSubmit: (e: React.FormEvent) => void;
   loading: boolean;
@@ -49,6 +50,10 @@ export default function AggregationForm({
   onSubmit,
   loading
 }: AggregationFormProps) {
+
+  // Get the resetState function from setters
+  const { resetState } = setters;
+
   const [isCompact, setIsCompact] = useState(true);
 
   const isFormValid =
@@ -267,6 +272,13 @@ export default function AggregationForm({
                     onStartDateChange={setters.setStartDate}
                     onEndDateChange={setters.setEndDate}
                   />
+                  <button
+                    type="button"
+                    onClick={resetState}
+                    className="text-sm text-gray-500 hover:text-gray-700 px-1 py-8 rounded hover:bg-gray-100"
+                  >
+                    Reset Saved Settings
+                  </button>
           </div>
         </form>
       )}
