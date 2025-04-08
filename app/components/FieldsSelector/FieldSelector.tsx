@@ -88,8 +88,26 @@ export default function FieldSelector({ indices }: FieldSelectorProps) {
 
   return (
     <div className="w-full h-full flex flex-col">
-      {/* Configuration Form */}
-      <div className="bg-white rounded-lg shadow-lg border border-gray-200 w-full">
+      {/* Results Section */}
+      <div className="flex-grow w-full">
+        <ResultsDisplay
+          results={results}
+          error={error}
+          params={{
+            index: selectedIndex,
+            term,
+            interval: resolveInterval(),
+            numericField,
+            timestamp,
+            filterField,
+            filterValue
+          }}
+          onDateRangeChange={handleDateRangeChange}
+          onZoomHistory={onZoomHistory}
+        />
+      </div>  
+            {/* Configuration Form */}
+            <div className="bg-white rounded-lg shadow-lg border border-gray-200 w-full">
         <AggregationForm
           indices={indices}
           fields={fields}
@@ -109,25 +127,6 @@ export default function FieldSelector({ indices }: FieldSelectorProps) {
           loading={loading}
         />
       </div>
-
-      {/* Results Section */}
-      <div className="flex-grow w-full">
-        <ResultsDisplay
-          results={results}
-          error={error}
-          params={{
-            index: selectedIndex,
-            term,
-            interval: resolveInterval(),
-            numericField,
-            timestamp,
-            filterField,
-            filterValue
-          }}
-          onDateRangeChange={handleDateRangeChange}
-          onZoomHistory={onZoomHistory}
-        />
-      </div>  
     </div>
   );
 }

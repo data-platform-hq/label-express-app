@@ -41,7 +41,7 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
     return (
       <div className="fixed inset-0 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div 
-          className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 transform transition-all"
+          className="bg-white shadow-xl max-w-md w-full p-6 transform transition-all"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center mb-4">
@@ -157,7 +157,7 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
   };
 
   return (
-    <div className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full">
+    <div className="bg-white shadow-md overflow-hidden flex flex-col h-full">
       {/* Header with Title and Count */}
       <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
         <h4 className="text-base font-semibold text-gray-900 flex items-center">

@@ -29,7 +29,7 @@ export default function AnnotationDetails({
   }
 
   return ( 
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md p-2 bg-white shadow-sm">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1  p-2 bg-white shadow-sm">
       {/* All details in a single row with flex layout */}
       <div className="whitespace-nowrap">
         <span className="text-gray-700">Type:</span>{' '}

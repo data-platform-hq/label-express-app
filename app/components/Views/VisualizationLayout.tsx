@@ -19,7 +19,7 @@ export default function VisualizationLayout({
   popupContent
 }: VisualizationLayoutProps) {
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden flex flex-col h-full">
+    <div className="bg-white shadow overflow-hidden flex flex-col h-full">
       {/* Controls bar at the top */}
       <div className="border-b border-gray-200 p-2 bg-gray-50">
         {controlsContent}

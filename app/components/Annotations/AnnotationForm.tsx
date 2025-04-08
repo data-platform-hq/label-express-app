@@ -79,7 +79,7 @@ export default function AnnotationForm({
         <div className="relative">
           <select
             id={id}
-            className="w-full pl-3 pr-10 py-2 text-sm border border-gray-300 bg-white rounded-md shadow-sm 
+            className="w-full pl-3 pr-10 py-2 text-sm border border-gray-300 bg-white shadow-sm 
                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
                       appearance-none"
             value={value}
