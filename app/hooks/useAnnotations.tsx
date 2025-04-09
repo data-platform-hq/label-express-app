@@ -2,16 +2,16 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Annotation } from '@/app/components/types';
-import { fetchAnnotationRecords, removeAnnotationRecord } from '@/app/utils/actions';
+import { fetchAnnotationRecords, removeAnnotationRecord, updateAnnotationRecord } from '@/app/utils/actions';
 import { useFormState } from '@/app/contexts/FormStateContext';
 import * as d3 from 'd3';
-import { stat } from 'fs';
 
 interface UseAnnotationsResult {
   annotations: Annotation[];
   isLoadingAnnotations: boolean;
   loadAnnotations: () => Promise<void>;
   handleDeleteAnnotation: (documentId: string) => Promise<void>;
+  handleUpdateAnnotation: (documentId: string, updates: Partial<Annotation>) => Promise<void>;
 }
 
 // Helper function to get or generate color for an annotation type
@@ -170,10 +170,22 @@ export function useAnnotations(): UseAnnotationsResult {
     }
   };
 
+  const handleUpdateAnnotation = async (id: string, updates: Partial<Annotation>) => {
+    try {
+      // Assuming you have a function to update the annotation
+      await updateAnnotationRecord(id, updates);
+      // After updating, reload annotations
+      loadAnnotations();
+    } catch (error) {
+      console.error('Failed to update annotation:', error);
+    }
+  };
+
   return {
     annotations,
     isLoadingAnnotations,
     loadAnnotations,
-    handleDeleteAnnotation
+    handleDeleteAnnotation,
+    handleUpdateAnnotation
   };
 }

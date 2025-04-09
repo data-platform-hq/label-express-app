@@ -257,6 +257,31 @@ export async function deleteAnnotationRecord(annotationId: string) {
   }
 }
 
+// Delete annotation from OpenSearch
+export async function updateAnnotation(annotationId: string, updates: Partial<Annotation>) {
+  
+  const annotationIndex = process.env.ANNOTATION_INDEX || 'default_annotation_index'; 
+
+  // update document and set deleted flag to true
+  try {
+    const response = await client.update({
+      index: annotationIndex,
+      id: annotationId,
+      body: {
+        doc: updates
+      },
+    });
+
+    // call a function without blocking the return
+    refreshIndex(annotationIndex);
+    
+    return response.body;
+  } catch (error) {
+    console.error('Error deleting annotation:', error);
+    throw error;
+  }
+}
+
 // Load filter values from OpenSearch
 export async function searchFilterValues(
   indexName: string,

@@ -23,8 +23,6 @@ export default function AnnotationDetails({
   onApproval,
   sidebarOpen 
 }: AnnotationDetailsProps) {
-
-  console.log('AnnotationDetails', { user});
   
   const isAdmin = user?.role === "admin";
   
@@ -57,7 +55,7 @@ export default function AnnotationDetails({
         indicator: editableIndicator,
         recommendation: editableRecommendation,
         status: 'approved',
-        updatedBy: {email: user?.email, name: user?.name, role: user?.role, id: user?.id},
+        updatedBy: user,
         updatedAt: new Date().toISOString()
       };
       onApproval(selectedAnnotation.id, updates);
@@ -72,7 +70,7 @@ export default function AnnotationDetails({
         indicator: editableIndicator,
         recommendation: editableRecommendation,
         status: 'rejected',
-        updatedBy: {email: user?.email, name: user?.name, role: user?.role, id: user?.id},
+        updatedBy: user,
         updatedAt: new Date().toISOString()
       };
       onApproval(selectedAnnotation.id, updates);

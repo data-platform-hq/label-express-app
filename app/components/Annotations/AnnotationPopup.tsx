@@ -20,7 +20,9 @@ export default function AnnotationPopup({
 }: AnnotationPopupProps) {
 
   const { data: session } = useSession()
-  const user = session?.user?.name
+
+  const user = session?.user || {};
+
 
   const handleCreateAnnotation = async (formData: {
     description: string;
@@ -46,7 +48,7 @@ export default function AnnotationPopup({
         indicator: formData.indicator,
         recommendation: formData.recommendation,
         createdAt: new Date().toISOString(),
-        createdBy: session?.user?.email || '',
+        createdBy: user,
         status: 'created'
       };
 

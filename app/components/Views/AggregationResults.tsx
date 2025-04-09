@@ -64,6 +64,7 @@ export default function AggregationResults({
     isLoadingAnnotations, 
     loadAnnotations, 
     handleDeleteAnnotation,
+    handleUpdateAnnotation
   } = useAnnotations();
   
   const {
@@ -284,10 +285,21 @@ export default function AggregationResults({
     }, 1000);
   }, [loadAnnotations, resetBrushSelection]);
 
-  const handleApprovalStatus = (annotationId: any, updates: {}) => {
+  // const handleApprovalStatus = useCallback(async (annotationId: any, updates: {})) => {
+  //   // Handle approval status change
+  //   console.log('Handling approval status for annotation:', updates);
+
+
+  // });
+
+  const handleApprovalStatus = useCallback(async (annotationId: any, updates: {}) => {
     // Handle approval status change
     console.log('Handling approval status for annotation:', updates);
-  };
+    
+     await handleUpdateAnnotation(annotationId, updates);
+
+  }, []); 
+
 
 
   // Add these functions

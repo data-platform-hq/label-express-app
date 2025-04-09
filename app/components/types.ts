@@ -53,7 +53,9 @@ export interface TermData {
     recommendation: string;
     color?: string;
     createdAt: string;
-    createdBy: string;
+    createdBy: {};
     status: AnnotationStatus; 
+    updatedAt?: string;
+    updatedBy?: {};
   }
 

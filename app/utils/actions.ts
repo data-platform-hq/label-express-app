@@ -8,6 +8,7 @@ import {
   indexAnnotationRecord,
   searchAnnotationRecords,
   deleteAnnotationRecord,
+  updateAnnotation,
   searchFilterValues 
 } from '@/lib/opensearch';
 import { Annotation } from '@/app/components/types';
@@ -104,6 +105,19 @@ export async function removeAnnotationRecord(annotationId: string) {
   catch (error)
   {
     console.error('Error deleting annotation:', error);
+    return { error: 'Failed to delete annotation' };
+  } 
+}
+
+export async function updateAnnotationRecord(annotationId: string, updates: Partial<Annotation>) {
+
+  try 
+  {
+    return await updateAnnotation(annotationId, updates);
+  }
+  catch (error)
+  {
+    console.error('Error updateing annotation:', error);
     return { error: 'Failed to delete annotation' };
   } 
 }
