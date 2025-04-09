@@ -10,6 +10,9 @@ import {
   OptionType
 } from '@/app/components/Annotations/annotationOptions';
 
+import { useSession } from 'next-auth/react';
+
+
 interface AnnotationDetailsProps {
   selectedAnnotation?: any | null;
   user?: any;
@@ -24,7 +27,9 @@ export default function AnnotationDetails({
   sidebarOpen 
 }: AnnotationDetailsProps) {
   
-  const isAdmin = user?.role === "admin";
+  const { data: session } = useSession();
+  
+  const isAdmin = session?.user?.role === "admin";
   
   // State for editable fields (for admins)
   const [editableType, setEditableType] = useState<string>('');
@@ -47,6 +52,8 @@ export default function AnnotationDetails({
     return null;
   }
   
+  // TODO: add history of changes
+  //TODO: reload all annotations when one is updated
   // Handle approval with current editable values
   const handleApprove = () => {
     if (onApproval && selectedAnnotation.id) {
@@ -152,7 +159,8 @@ export default function AnnotationDetails({
         </div>
         
         {/* Approval buttons for admins - only show for 'created' status */}
-        {isAdmin && selectedAnnotation.status === 'created' && (
+        {/* {isAdmin && selectedAnnotation.status === 'created' && ( */}
+        {isAdmin && (
           <div className="ml-auto flex space-x-2">
             <button 
               className="px-2 py-0.5 bg-green-600 text-white rounded hover:bg-green-700 text-xs"

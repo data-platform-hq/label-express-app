@@ -1,4 +1,3 @@
-// components/AggregationResults.tsx
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { TimePoint, AggregationParams } from '@/app/components/types';
@@ -13,8 +12,6 @@ import { useBrushInteraction } from '@/app/components/Chart/useBrushInteraction'
 import { useAnnotations } from '@/app/hooks/useAnnotations';
 import { useFormState } from '@/app/contexts/FormStateContext';
 import { useSession } from 'next-auth/react';
-
-
 
 interface AggregationResultsProps {
   results: TimePoint[];
@@ -46,8 +43,8 @@ export default function AggregationResults({
   // Reference to track if we've loaded the full list
   const fullListLoadedRef = useRef(false);
   
-  // Add a state to track when a new annotation is created
-  const [newAnnotationCreated, setNewAnnotationCreated] = useState(false);
+  // Add a state to track when a new annotation is created or updated
+  const [annotationModified, setAnnotationModified] = useState(false);
 
   // Add a state for tracking loading of new annotations
   const [isLoadingNewAnnotation, setIsLoadingNewAnnotation] = useState(false);
@@ -75,15 +72,30 @@ export default function AggregationResults({
     resetBrushSelection
   } = useBrushInteraction(onDateRangeChange, () => setShowAnnotationPopup(true));
 
+  // Effect to reload annotations when an update occurs
+  useEffect(() => {
+    if (annotationModified) {
+      // Reset the flag first to avoid infinite loops
+      setAnnotationModified(false);
+      
+      // Force reload annotations
+      loadAnnotations();
+      
+      // Reset navigation flags to ensure we get fresh data
+      setIsNavigatingToAnnotation(false);
+      fullListLoadedRef.current = false;
+    }
+  }, [annotationModified, loadAnnotations]);
+
   // Effect to manage the annotation list
   useEffect(() => {
-    // Skip if we're still loading and this isn't a new annotation
-    if (isLoadingAnnotations && !newAnnotationCreated) {
+    // Skip if we're still loading and this isn't a modification
+    if (isLoadingAnnotations && !annotationModified) {
       return;
     }
     
-    // If we're navigating to an annotation, don't update the list unless it's a new annotation
-    if (isNavigatingToAnnotation && !newAnnotationCreated) {
+    // If we're navigating to an annotation, don't update the list unless it's a modification
+    if (isNavigatingToAnnotation && !annotationModified) {
       return;
     }
     
@@ -91,42 +103,27 @@ export default function AggregationResults({
     // 1. We haven't loaded the full list yet, OR
     // 2. We're in the initial state (brushMode === 'disabled'), OR
     // 3. We're in zoom mode (which means user explicitly zoomed), OR
-    // 4. A new annotation was just created
+    // 4. An annotation was just modified (created, updated, etc.)
     if (annotations.length > 0 && 
         (!fullListLoadedRef.current || 
          brushMode === 'disabled' || 
          brushMode === 'zoom' || 
-         newAnnotationCreated)) {      
+         annotationModified)) {      
       
-      // If a new annotation was created, append it to the existing list
-      if (newAnnotationCreated && annotationList.length > 0) {
-        // Find annotations that aren't already in the list
-        const existingIds = new Set(annotationList.map(a => a.id));
-        const newAnnotations = annotations.filter(a => !existingIds.has(a.id));
-        
-        if (newAnnotations.length > 0) {
-          setAnnotationList(prev => [...prev, ...newAnnotations]);
-        } else {
-          // Fallback to replacing the list if we can't find new ones
-          setAnnotationList(annotations);
-        }
-      } else {
-        // Otherwise just replace the list
-        setAnnotationList(annotations);
-      }
+      // Replace the entire list to ensure we have the most up-to-date data
+      setAnnotationList(annotations);
       
       // Mark that we've loaded the full list
       if (brushMode === 'disabled') {
         fullListLoadedRef.current = true;
       }
       
-      // Reset the new annotation flag
-      if (newAnnotationCreated) {
-        setNewAnnotationCreated(false);
+      // Reset the loading indicator
+      if (annotationModified) {
         setIsLoadingNewAnnotation(false);
       }
     }
-  }, [isLoadingAnnotations, annotations, brushMode, isNavigatingToAnnotation, newAnnotationCreated, annotationList]);
+  }, [isLoadingAnnotations, annotations, brushMode, isNavigatingToAnnotation, annotationModified]);
 
   // Effect to clear selected annotation when sidebar is closed
   useEffect(() => {
@@ -148,7 +145,6 @@ export default function AggregationResults({
   }, [onZoomHistory]);
 
   const handleNavigateLeft = (interval: string) => {
-
     // Parse the current visible time range
     const currentStart = new Date(startDate);
     const currentEnd = new Date(endDate);
@@ -164,11 +160,9 @@ export default function AggregationResults({
     if (onDateRangeChange) {
       onDateRangeChange(newStart.toISOString(), newEnd.toISOString());
     }
-
   }
 
   const handleNavigateRight = (interval: string) => {
-
     // Parse the current visible time range
     const currentStart = new Date(startDate);
     const currentEnd = new Date(endDate);
@@ -183,12 +177,8 @@ export default function AggregationResults({
     // Call the onDateRangeChange function with the new date range
     if (onDateRangeChange) {
       onDateRangeChange(newStart.toISOString(), newEnd.toISOString());
-    } 
-
-
-
+    }
   }
-
 
   // Handle navigation to a specific annotation
   const handleNavigateAnnotation = useCallback((annotation: any) => {
@@ -216,7 +206,6 @@ export default function AggregationResults({
       onDateRangeChange(adjustedStartDate.toISOString(), adjustedEndDate.toISOString());
     }
   }, [onDateRangeChange]);
-
 
   // this function to navigate to the full annotation list date range
   const handleNavigateToAnnotationList = useCallback(() => {
@@ -258,8 +247,8 @@ export default function AggregationResults({
     // Delete the annotation
     await handleDeleteAnnotation(id);
     
-    // Also remove it from our local list
-    setAnnotationList(prev => prev.filter(a => a.id !== id));
+    // Mark that annotations were modified to trigger a reload
+    setAnnotationModified(true);
   }, [handleDeleteAnnotation]);
 
   const handleEditAnnotation = (annotation: any) => {
@@ -268,7 +257,6 @@ export default function AggregationResults({
 
   // Handle successful annotation creation
   const handleAnnotationCreated = useCallback(() => {
-    
     // Close popup and reset brush
     setShowAnnotationPopup(false);
     resetBrushSelection();
@@ -276,31 +264,28 @@ export default function AggregationResults({
     // Show loading indicator
     setIsLoadingNewAnnotation(true);
     
-    // Set flag that we've created a new annotation
-    setNewAnnotationCreated(true);
-    
-    // Force reload annotations with a delay to ensure backend has processed it
-    setTimeout(() => {
-      loadAnnotations();
-    }, 1000);
-  }, [loadAnnotations, resetBrushSelection]);
-
-  // const handleApprovalStatus = useCallback(async (annotationId: any, updates: {})) => {
-  //   // Handle approval status change
-  //   console.log('Handling approval status for annotation:', updates);
-
-
-  // });
+    // Set flag that we've modified annotations
+    setAnnotationModified(true);
+  }, [resetBrushSelection]);
 
   const handleApprovalStatus = useCallback(async (annotationId: any, updates: {}) => {
     // Handle approval status change
     console.log('Handling approval status for annotation:', updates);
     
-     await handleUpdateAnnotation(annotationId, updates);
-
-  }, []); 
-
-
+    // Update the annotation
+    await handleUpdateAnnotation(annotationId, updates);
+    
+    // Mark that annotations were modified to trigger a reload
+    setAnnotationModified(true);
+    
+    // If we have a selected annotation that was just updated, update it in our state
+    if (selectedAnnotation && selectedAnnotation.id === annotationId) {
+      setSelectedAnnotation(prev => ({
+        ...prev,
+        ...updates
+      }));
+    }
+  }, [handleUpdateAnnotation, selectedAnnotation]);
 
   // Add these functions
   const handleZoomIn = useCallback(() => {
@@ -396,7 +381,7 @@ export default function AggregationResults({
           onBrushEnd={handleBrushEnd}
           annotations={annotations} // Use current annotations for the chart
           onZoomHistory={handleZoomHistory}
-      />
+        />
       }
       footerContent={
         <AnnotationDetails 
@@ -416,14 +401,6 @@ export default function AggregationResults({
             }}
             onSuccess={() => {
               handleAnnotationCreated();
-              setShowAnnotationPopup(false);
-              resetBrushSelection();
-              
-              // After creating a new annotation, reload annotations
-              // and reset the navigation flag to update the list
-              loadAnnotations();
-              setIsNavigatingToAnnotation(false);
-              fullListLoadedRef.current = false;
             }} 
             aggregationParams={params}
           />
