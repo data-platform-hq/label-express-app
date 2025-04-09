@@ -280,7 +280,7 @@ export default function AggregationResults({
     
     // If we have a selected annotation that was just updated, update it in our state
     if (selectedAnnotation && selectedAnnotation.id === annotationId) {
-      setSelectedAnnotation(prev => ({
+      setSelectedAnnotation((prev: any) => ({
         ...prev,
         ...updates
       }));
