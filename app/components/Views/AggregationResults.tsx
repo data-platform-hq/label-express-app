@@ -284,9 +284,9 @@ export default function AggregationResults({
     }, 1000);
   }, [loadAnnotations, resetBrushSelection]);
 
-  const handleApprovalStatus = (annotationId: any, status: string) => {
+  const handleApprovalStatus = (annotationId: any, updates: {}) => {
     // Handle approval status change
-    console.log('Handling approval status for annotation:', status);
+    console.log('Handling approval status for annotation:', updates);
   };
 
 
@@ -389,7 +389,7 @@ export default function AggregationResults({
       footerContent={
         <AnnotationDetails 
           selectedAnnotation={selectedAnnotation}
-          userRole={session?.user?.role}
+          user={session?.user}
           onApproval={handleApprovalStatus}
           sidebarOpen={showAnnotationSidebar}
         />
