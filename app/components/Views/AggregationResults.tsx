@@ -31,9 +31,7 @@ export default function AggregationResults({
 }: AggregationResultsProps) {
 
   const { startDate, endDate, interval } = useFormState();
- 
 
-  const [viewMode, setViewMode] = useState<'chart' | 'annotation'>('chart');
   const [showAnnotationSidebar, setShowAnnotationSidebar] = useState(false);
   const [showAnnotationPopup, setShowAnnotationPopup] = useState(false);
 
@@ -65,7 +63,7 @@ export default function AggregationResults({
     loadAnnotations, 
     handleDeleteAnnotation,
   } = useAnnotations();
-  
+
   const {
     brushMode,
     setBrushMode,
@@ -347,8 +345,6 @@ export default function AggregationResults({
       }
       controlsContent={
         <ViewControls
-          viewMode={viewMode}
-          setViewMode={setViewMode}
           showAnnotationSidebar={showAnnotationSidebar}
           setShowAnnotationSidebar={setShowAnnotationSidebar}
           brushMode={brushMode}
@@ -359,11 +355,10 @@ export default function AggregationResults({
           onNavigateLeft={handleNavigateLeft}
           onNavigateRight={handleNavigateRight}
           currentInterval={interval}
-          showBrushControls={hasResults && viewMode === 'chart'}
+          showBrushControls={hasResults}
         />
       }
       mainContent={
-          viewMode === 'chart' ? (
             <ChartView
               results={results}
               uniqueTerms={uniqueTerms}
@@ -374,14 +369,7 @@ export default function AggregationResults({
               onBrushEnd={handleBrushEnd}
               annotations={annotations} // Use current annotations for the chart
               onZoomHistory={handleZoomHistory}
-            />
-          ) : (
-            <AnnotationDetails 
-              results={results} 
-              uniqueTerms={uniqueTerms} 
-              selectedAnnotation={selectedAnnotation}
-            />
-          )
+            /> 
       }
       footerContent={
         <ResultsView 

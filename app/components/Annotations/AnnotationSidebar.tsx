@@ -28,7 +28,6 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedAnnotationIndex, setSelectedAnnotationIndex] = useState<number | null>(null);
-  const [filteredAnnotations, setFilteredAnnotations] = useState<Annotation[]>([]);
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     annotationId: null as string | null
@@ -85,12 +84,8 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
 
   useEffect(() => {
 
-    // Filter out deleted annotations
-    const activeAnnotations = annotations.filter(a => !a.deleted);
-    setFilteredAnnotations(activeAnnotations);
-    
     // Calculate if we should keep the current page or reset
-    const newTotalPages = Math.max(1, Math.ceil(activeAnnotations.length / itemsPerPage));
+    const newTotalPages = Math.max(1, Math.ceil(annotations.length / itemsPerPage));
     
     // Only reset to first page if:
     // 1. It's the first load
@@ -103,7 +98,7 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
   }, [annotations, itemsPerPage]);
 
   // Pagination calculations
-  const totalPages = Math.max(1, Math.ceil(filteredAnnotations.length / itemsPerPage));
+  const totalPages = Math.max(1, Math.ceil(annotations.length / itemsPerPage));
   
   // Page navigation
   const handlePrevPage = () => {
@@ -119,7 +114,7 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
   // Get current page annotations
   const indexOfLastAnnotation = currentPage * itemsPerPage;
   const indexOfFirstAnnotation = indexOfLastAnnotation - itemsPerPage;
-  const currentAnnotations = filteredAnnotations.slice(
+  const currentAnnotations = annotations.slice(
     indexOfFirstAnnotation, 
     indexOfLastAnnotation
   );
@@ -130,18 +125,8 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
     onNavigateAnnotation?.(annotation);
   };
 
-  if (isLoading) {
-    return (
-      <div className="p-4 text-center h-full flex items-center justify-center">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
-          <p className="text-gray-500">Loading annotations...</p>
-        </div>
-      </div>
-    );
-  }
 
-  if (filteredAnnotations.length === 0) {
+  if (annotations.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500 h-full flex items-center justify-center">
         No annotations found
@@ -152,7 +137,7 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
   // Function to get the first showing and last showing item numbers
   const getItemRange = () => {
     const firstItem = indexOfFirstAnnotation + 1;
-    const lastItem = Math.min(indexOfLastAnnotation, filteredAnnotations.length);
+    const lastItem = Math.min(indexOfLastAnnotation, annotations.length);
     return `${firstItem}-${lastItem}`;
   };
 
@@ -163,7 +148,7 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
         <h4 className="text-base font-semibold text-gray-900 flex items-center">
           Annotations 
           <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
-            {filteredAnnotations.length}
+            {annotations.length}
           </span>
               {/* Navigation arrows for annotations */}
     <div className="flex items-center ml-2">
@@ -178,7 +163,7 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
             // Navigate to previous page and select last item
             const newPage = currentPage - 1;
             setCurrentPage(newPage);
-            const pageAnnotations = filteredAnnotations.slice(
+            const pageAnnotations = annotations.slice(
               (newPage - 1) * itemsPerPage, 
               newPage * itemsPerPage
             );
@@ -214,7 +199,7 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
             // Navigate to next page and select first item
             const newPage = currentPage + 1;
             setCurrentPage(newPage);
-            const pageAnnotations = filteredAnnotations.slice(
+            const pageAnnotations = annotations.slice(
               (newPage - 1) * itemsPerPage, 
               newPage * itemsPerPage
             );
@@ -319,10 +304,10 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
       </div>
   
       {/* Page Navigation with Items Per Page Display */}
-      {filteredAnnotations.length > itemsPerPage && (
+      {annotations.length > itemsPerPage && (
         <div className="px-3 py-2 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
           <span className="text-xs text-gray-500">
-            Showing {getItemRange()} of {filteredAnnotations.length}
+            Showing {getItemRange()} of {annotations.length}
           </span>
           
           <div className="flex items-center space-x-2">

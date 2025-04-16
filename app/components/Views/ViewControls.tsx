@@ -3,9 +3,7 @@ import React, { useState }from 'react';
 import { BrushMode } from '@/app/components/types';
 
 interface ViewControlsProps {
-  // View mode props
-  viewMode: 'chart' | 'annotation';
-  setViewMode: (mode: 'chart' | 'annotation') => void;
+
   showAnnotationSidebar: boolean;
   setShowAnnotationSidebar: (show: boolean) => void;
   
@@ -42,8 +40,6 @@ const timeIntervals = [
 ];
 
 export default function ViewControls({
-  viewMode,
-  setViewMode,
   showAnnotationSidebar,
   setShowAnnotationSidebar,
   brushMode,
@@ -73,7 +69,7 @@ export default function ViewControls({
     <div className="flex justify-between items-center">
       {/* Selection Mode Controls - Left Side */}
       <div className="flex space-x-2">
-        {viewMode === 'chart' && showBrushControls && (
+        { showBrushControls && (
           <>
             <button
               onClick={() => setBrushMode('disabled')}
@@ -202,22 +198,6 @@ export default function ViewControls({
       {/* View Options - Right Side */}
      
       <div className="flex space-x-2">
-          <button
-            onClick={() => setViewMode('chart')}
-            className={`px-3 py-1 rounded text-xs ${
-              viewMode === 'chart' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
-            }`}
-          >
-            Chart
-          </button>
-          <button
-            onClick={() => setViewMode('annotation')}
-            className={`px-3 py-1 rounded text-xs ${
-              viewMode === 'annotation' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
-            }`}
-          >
-            Annotation Details
-          </button>
           <button
             onClick={() => setShowAnnotationSidebar(!showAnnotationSidebar)}
             className={`px-3 py-1 rounded text-xs min-w-[120px] ${
