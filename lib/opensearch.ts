@@ -4,7 +4,13 @@ import { Annotation } from '@/app/components/types';
 
 // Configure your OpenSearch client
 const client = new Client({
-  node: process.env.OPENSEARCH_URL || 'http://localhost:9200',
+  // create url from process.env.OPENSEARCH_HOST, process.env.OPENSEARCH_PROTOCOL, process.env.OPENSEARCH_PORT
+  node: `${process.env.OPENSEARCH_PROTOCOL}://${process.env.OPENSEARCH_HOST}:${process.env.OPENSEARCH_PORT}`,
+  ssl: {
+    rejectUnauthorized: false // Set to true in production with proper certificates
+  },
+
+
   auth: {
     username: process.env.OPENSEARCH_USERNAME || '',
     password: process.env.OPENSEARCH_PASSWORD || '',

@@ -14,6 +14,10 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 ## OS with NO security
 ```docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "DISABLE_INSTALL_DEMO_CONFIG=true" -e "DISABLE_SECURITY_PLUGIN=true"  -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=Alexi@5we%6" opensearchproject/opensearch:latest```
 
+## OS with Security
+
+``` docker run -d --name opensearch_secure -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=password"  opensearchproject/opensearch:latest ```
+
 ## Postgres
 ```docker run --name postgres -e POSTGRES_PASSWORD=mysecretpassword -v postgres_data:/var/lib/postgresql/data -p 5432:5432 -d postgres```
 

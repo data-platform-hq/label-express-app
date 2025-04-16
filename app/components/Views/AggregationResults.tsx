@@ -178,10 +178,7 @@ export default function AggregationResults({
       onDateRangeChange(newStart.toISOString(), newEnd.toISOString());
     } 
 
-
-
   }
-
 
   // Handle navigation to a specific annotation
   const handleNavigateAnnotation = useCallback((annotation: any) => {

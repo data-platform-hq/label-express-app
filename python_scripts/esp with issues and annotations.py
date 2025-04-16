@@ -514,9 +514,12 @@ def write_to_opensearch(documents_generator, index_name="esp_pump_data", annotat
     """
     # Connect to OpenSearch
     os_client = OpenSearch(
-        ['http://127.0.0.1:9200'],
-        request_timeout=120,  # Increased timeout
-        ssl_show_warn=False
+        ['https://127.0.0.1:9200'],
+        http_auth=('admin', 'password'),
+        verify_certs=False,  # Disable SSL certificate verification
+        ssl_show_warn=False,
+        ssl_assert_hostname=False,  # Disable hostname verification if required
+        request_timeout=120  # Increased timeout
     )
 
     # Create main index with optimized settings if it doesn't exist
