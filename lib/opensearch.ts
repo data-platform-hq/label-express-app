@@ -183,7 +183,7 @@ export async function indexAnnotationRecord(annotation: Annotation) {
 }
 
 // Load annotations from OpenSearch
-export async function searchAnnotationRecords(startDate: string, endDate: string, filterField: string, filterValue: string) {
+export async function searchAnnotations(startDate: string, endDate: string, filterField: string, filterValue: string) {
   const annotationIndex = process.env.ANNOTATION_INDEX || 'default_annotation_index';  
  
   try {
@@ -219,7 +219,7 @@ export async function searchAnnotationRecords(startDate: string, endDate: string
     };
     
     const searchBody: any = {
-      size: 1000,
+      size: 10000,
       query: filterQuery
     };
 
@@ -238,7 +238,7 @@ export async function searchAnnotationRecords(startDate: string, endDate: string
 }
 
 // Delete annotation from OpenSearch
-export async function deleteAnnotationRecord(annotationId: string) {
+export async function deleteAnnotation(annotationId: string) {
   const annotationIndex = process.env.ANNOTATION_INDEX || 'default_annotation_index'; 
 
   // update document and set deleted flag to true
@@ -263,6 +263,42 @@ export async function deleteAnnotationRecord(annotationId: string) {
   }
 }
 
+// Update annotation from OpenSearch
+export async function updateAnnotation(annotationId: string, actionType: string, payload?: any) {
+  const annotationIndex = process.env.ANNOTATION_INDEX || 'default_annotation_index';
+  
+  try {
+    // Determine the document update based on action type
+    const doc = actionType === 'delete' 
+      ? { deleted: true } 
+      : payload;
+      
+    // Validate action type
+    if (actionType !== 'delete' && actionType !== 'update') {
+      throw new Error(`Invalid action type: ${actionType}. Must be 'delete' or 'update'`);
+    }
+    
+    // If update action but no payload provided
+    if (actionType === 'update' && !payload) {
+      throw new Error('Payload is required for update action');
+    }
+    
+    // Execute the update operation
+    const response = await client.update({
+      index: annotationIndex,
+      id: annotationId,
+      body: { doc }
+    });
+    
+    // Refresh index asynchronously
+    refreshIndex(annotationIndex);
+    
+    return response.body;
+  } catch (error) {
+    console.error(`Error ${actionType === 'delete' ? 'deleting' : 'updating'} annotation:`, error);
+    throw error;
+  }
+}
 // Load filter values from OpenSearch
 export async function searchFilterValues(
   indexName: string,

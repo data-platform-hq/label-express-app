@@ -5,11 +5,13 @@ import { useState } from 'react';
 
 interface AnnotationViewProps {
   onUpdateAnnotation?: (id: string, actionType: string, update: any) => void;
+  onDeleteAnnotation?: (id: string) => void;
   selectedAnnotation: Annotation | null;
 }
 
 export default function AnnotationView({
   onUpdateAnnotation,
+  onDeleteAnnotation,
   selectedAnnotation,
 }: AnnotationViewProps) {
   const [deleteModal, setDeleteModal] = useState({
@@ -84,6 +86,7 @@ export default function AnnotationView({
               onClick={() => {
                 if (deleteModal.annotationId && onUpdateAnnotation) {
                   onUpdateAnnotation(deleteModal.annotationId, 'delete', {});
+                  //onDeleteAnnotation(deleteModal.annotationId);
                   setDeleteModal({ isOpen: false, annotationId: null });
                 }
               }}

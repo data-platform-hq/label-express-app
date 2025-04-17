@@ -54,13 +54,15 @@ export default function AggregationResults({
   
   // Use custom hooks to extract terms and color scale
   const { uniqueTerms, colorScale } = useDataProcessor(results || []);
-  
+
+
   // useAnnotations hook call
   const { 
     annotations, 
     isLoadingAnnotations, 
     loadAnnotations, 
     handleDeleteAnnotation,
+    handleUpdateAnnotation,
   } = useAnnotations();
 
   const {
@@ -73,6 +75,7 @@ export default function AggregationResults({
 
   // Effect to manage the annotation list
   useEffect(() => {
+
     // Skip if we're still loading and this isn't a new annotation
     if (isLoadingAnnotations && !newAnnotationCreated) {
       return;
@@ -125,17 +128,22 @@ export default function AggregationResults({
   }, [isLoadingAnnotations, annotations, brushMode, isNavigatingToAnnotation, newAnnotationCreated, annotationList]);
 
 
-  // Custom zoom out handler that resets the annotation list
+
+
+  // Modify your handleZoomHistory function
   const handleZoomHistory = useCallback(() => {
-    // Reset the navigation flag
-    setIsNavigatingToAnnotation(false);
     
-    // Reset the full list loaded flag
+    setSelectedAnnotation(null);
+    setAnnotationList([]);
+    setIsNavigatingToAnnotation(false); 
     fullListLoadedRef.current = false;
+    setIsLoadingNewAnnotation(false);
     
     // Call the provided zoom out handler
     onZoomHistory();
+
   }, [onZoomHistory]);
+
 
   const handleNavigateLeft = (interval: string) => {
 
@@ -204,42 +212,6 @@ export default function AggregationResults({
     }
   }, [onDateRangeChange]);
 
-
-  // this function to navigate to the full annotation list date range
-  const handleNavigateToAnnotationList = useCallback(() => {
-    // Reset the navigation flag
-    setIsNavigatingToAnnotation(false);
-    
-    // Find the earliest and latest dates from the annotation list
-    if (annotationList.length > 0) {
-      // Sort annotations by start date
-      const sortedByStart = [...annotationList].sort(
-        (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-      );
-      
-      // Sort annotations by end date (separate sort)
-      const sortedByEnd = [...annotationList].sort(
-        (a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime()
-      );
-      
-      // Get earliest start date and latest end date
-      const earliestDate = new Date(sortedByStart[0].startDate);
-      const latestDate = new Date(sortedByEnd[0].endDate);
-      
-      // Add a small buffer (10% on each side)
-      const totalDuration = latestDate.getTime() - earliestDate.getTime();
-      const buffer = totalDuration * 0.1;
-      
-      const startDate = new Date(earliestDate.getTime() - buffer);
-      const endDate = new Date(latestDate.getTime() + buffer);
-      
-      // Navigate to this date range
-      if (onDateRangeChange) {
-        onDateRangeChange(startDate.toISOString(), endDate.toISOString());
-      }
-    }
-  }, [annotationList, onDateRangeChange]);
-
   // Handle annotation deletion
   const handleAnnotationDeletion = useCallback(async (id: string) => {
     // Delete the annotation
@@ -249,9 +221,31 @@ export default function AggregationResults({
     setAnnotationList(prev => prev.filter(a => a.id !== id));
   }, [handleDeleteAnnotation]);
 
-  const handleEditAnnotation = (annotation: any) => {
-    console.log('Editing annotation:', annotation);
-  };
+  // Handle annotation update
+  const handleAnnotationUpdate = useCallback(async (id: string, actionType: string, update: any) => {
+    // Update the annotation
+    await handleUpdateAnnotation(id, actionType, update);
+
+    if (actionType === 'delete') {
+      // Remove the annotation from the local list
+      setAnnotationList(prev => prev.filter(a => a.id !== id));
+      setSelectedAnnotation(null);
+    }
+    else {
+      // Update the annotation in the local list
+      setAnnotationList(prev => { 
+        const index = prev.findIndex(a => a.id === id);
+        if (index !== -1) {
+          const updatedAnnotations = [...prev];
+          updatedAnnotations[index] = { ...updatedAnnotations[index], ...update };
+          return updatedAnnotations;
+        }
+        return prev;
+      }
+      );
+    }
+    
+  }, [handleUpdateAnnotation]);
 
   // Handle successful annotation creation
   const handleAnnotationCreated = useCallback(() => {
@@ -337,8 +331,6 @@ export default function AggregationResults({
           isLoading={isLoadingAnnotations && annotationList.length === 0}
           onDeleteAnnotation={handleAnnotationDeletion}
           onNavigateAnnotation={handleNavigateAnnotation}
-          onNavigateToAnnotationList={handleNavigateToAnnotationList}
-          onEditAnnotation={handleEditAnnotation}
           isPreservedList={isNavigatingToAnnotation}
         />
       }
@@ -374,9 +366,9 @@ export default function AggregationResults({
         // if sidebar is open, show annotation details
         showAnnotationSidebar && selectedAnnotation ? (
         <AnnotationView 
-          //onUpdateAnnotation={handleAnnotationUpdate}
+          onUpdateAnnotation={handleAnnotationUpdate}
           selectedAnnotation={selectedAnnotation}
-          
+          onDeleteAnnotation={handleAnnotationDeletion}        
         />
         ) : null
       }

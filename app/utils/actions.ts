@@ -6,8 +6,9 @@ import {
   getIndexStats, 
   performAggregation,
   indexAnnotationRecord,
-  searchAnnotationRecords,
-  deleteAnnotationRecord,
+  searchAnnotations,
+  deleteAnnotation,
+  updateAnnotation,
   searchFilterValues 
 } from '@/lib/opensearch';
 import { Annotation } from '@/app/types/types';
@@ -86,7 +87,7 @@ export async function saveAnnotationRecord(annotation: Annotation) {
 export async function fetchAnnotationRecords(startDate: string, endDate: string, filterField: string, filterValue: string) {
   try {
 
-    return await searchAnnotationRecords(startDate, endDate, filterField, filterValue);
+    return await searchAnnotations(startDate, endDate, filterField, filterValue);
 
   }
   catch (error) {
@@ -99,7 +100,20 @@ export async function removeAnnotationRecord(annotationId: string) {
 
   try 
   {
-    return await deleteAnnotationRecord(annotationId);
+    return await deleteAnnotation(annotationId);
+  }
+  catch (error)
+  {
+    console.error('Error deleting annotation:', error);
+    return { error: 'Failed to delete annotation' };
+  } 
+}
+
+export async function updateAnnotationRecord(annotationId: string, actionType: string, update: any) {
+
+  try 
+  {
+    return await updateAnnotation(annotationId, actionType, update);
   }
   catch (error)
   {

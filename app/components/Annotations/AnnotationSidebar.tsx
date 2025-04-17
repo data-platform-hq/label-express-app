@@ -8,9 +8,8 @@ interface AnnotationSidebarProps {
   annotations: Annotation[];
   isLoading?: boolean;
   onDeleteAnnotation?: (id: string) => void;
-  onEditAnnotation?: (annotation: Annotation) => void;
   onNavigateAnnotation?: (annotation: Annotation) => void;
-  onNavigateToAnnotationList?: () => void;
+  //onNavigateToAnnotationList?: () => void;
   itemsPerPage?: number;
   isPreservedList?: boolean;
 }
@@ -19,11 +18,10 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
   annotations,
   isLoading = false,
   onDeleteAnnotation,
-  onEditAnnotation,
   onNavigateAnnotation,
   itemsPerPage = 16,
   isPreservedList = false,
-  onNavigateToAnnotationList
+  //onNavigateToAnnotationList
 
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -151,90 +149,79 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
             {annotations.length}
           </span>
               {/* Navigation arrows for annotations */}
-    <div className="flex items-center ml-2">
-      <button
-        onClick={() => {
-          if (selectedAnnotationIndex !== null && selectedAnnotationIndex > 0) {
-            const newIndex = selectedAnnotationIndex - 1;
-            setSelectedAnnotationIndex(newIndex);
-            const annotation = currentAnnotations[newIndex];
-            onNavigateAnnotation?.(annotation);
-          } else if (currentPage > 1) {
-            // Navigate to previous page and select last item
-            const newPage = currentPage - 1;
-            setCurrentPage(newPage);
-            const pageAnnotations = annotations.slice(
-              (newPage - 1) * itemsPerPage, 
-              newPage * itemsPerPage
-            );
-            const lastIndex = pageAnnotations.length - 1;
-            setSelectedAnnotationIndex(lastIndex);
-            onNavigateAnnotation?.(pageAnnotations[lastIndex]);
-          }
-        }}
-        disabled={
-          (selectedAnnotationIndex === null || selectedAnnotationIndex === 0) && 
-          currentPage === 1
-        }
-        className={`p-1 rounded-full ${
-          (selectedAnnotationIndex === null || selectedAnnotationIndex === 0) && currentPage === 1
-            ? 'text-gray-300 cursor-not-allowed'
-            : 'text-blue-500 hover:bg-blue-100'
-        }`}
-        title="Previous annotation"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-        </svg>
-      </button>
-      
-      <button
-        onClick={() => {
-          if (selectedAnnotationIndex !== null && selectedAnnotationIndex < currentAnnotations.length - 1) {
-            const newIndex = selectedAnnotationIndex + 1;
-            setSelectedAnnotationIndex(newIndex);
-            const annotation = currentAnnotations[newIndex];
-            onNavigateAnnotation?.(annotation);
-          } else if (currentPage < totalPages) {
-            // Navigate to next page and select first item
-            const newPage = currentPage + 1;
-            setCurrentPage(newPage);
-            const pageAnnotations = annotations.slice(
-              (newPage - 1) * itemsPerPage, 
-              newPage * itemsPerPage
-            );
-            setSelectedAnnotationIndex(0);
-            onNavigateAnnotation?.(pageAnnotations[0]);
-          }
-        }}
-        disabled={
-          (selectedAnnotationIndex === null || selectedAnnotationIndex === currentAnnotations.length - 1) && 
-          currentPage === totalPages
-        }
-        className={`p-1 rounded-full ${
-          (selectedAnnotationIndex === null || selectedAnnotationIndex === currentAnnotations.length - 1) && currentPage === totalPages
-            ? 'text-gray-300 cursor-not-allowed'
-            : 'text-blue-500 hover:bg-blue-100'
-        }`}
-        title="Next annotation"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-        </svg>
-      </button>
-    </div>
+            <div className="flex items-center ml-2">
+              <button
+                onClick={() => {
+                  if (selectedAnnotationIndex !== null && selectedAnnotationIndex > 0) {
+                    const newIndex = selectedAnnotationIndex - 1;
+                    setSelectedAnnotationIndex(newIndex);
+                    const annotation = currentAnnotations[newIndex];
+                    onNavigateAnnotation?.(annotation);
+                  } else if (currentPage > 1) {
+                    // Navigate to previous page and select last item
+                    const newPage = currentPage - 1;
+                    setCurrentPage(newPage);
+                    const pageAnnotations = annotations.slice(
+                      (newPage - 1) * itemsPerPage, 
+                      newPage * itemsPerPage
+                    );
+                    const lastIndex = pageAnnotations.length - 1;
+                    setSelectedAnnotationIndex(lastIndex);
+                    onNavigateAnnotation?.(pageAnnotations[lastIndex]);
+                  }
+                }}
+                disabled={
+                  (selectedAnnotationIndex === null || selectedAnnotationIndex === 0) && 
+                  currentPage === 1
+                }
+                className={`p-1 rounded-full ${
+                  (selectedAnnotationIndex === null || selectedAnnotationIndex === 0) && currentPage === 1
+                    ? 'text-gray-300 cursor-not-allowed'
+                    : 'text-blue-500 hover:bg-blue-100'
+                }`}
+                title="Previous annotation"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </button>
+              
+              <button
+                onClick={() => {
+                  if (selectedAnnotationIndex !== null && selectedAnnotationIndex < currentAnnotations.length - 1) {
+                    const newIndex = selectedAnnotationIndex + 1;
+                    setSelectedAnnotationIndex(newIndex);
+                    const annotation = currentAnnotations[newIndex];
+                    onNavigateAnnotation?.(annotation);
+                  } else if (currentPage < totalPages) {
+                    // Navigate to next page and select first item
+                    const newPage = currentPage + 1;
+                    setCurrentPage(newPage);
+                    const pageAnnotations = annotations.slice(
+                      (newPage - 1) * itemsPerPage, 
+                      newPage * itemsPerPage
+                    );
+                    setSelectedAnnotationIndex(0);
+                    onNavigateAnnotation?.(pageAnnotations[0]);
+                  }
+                }}
+                disabled={
+                  (selectedAnnotationIndex === null || selectedAnnotationIndex === currentAnnotations.length - 1) && 
+                  currentPage === totalPages
+                }
+                className={`p-1 rounded-full ${
+                  (selectedAnnotationIndex === null || selectedAnnotationIndex === currentAnnotations.length - 1) && currentPage === totalPages
+                    ? 'text-gray-300 cursor-not-allowed'
+                    : 'text-blue-500 hover:bg-blue-100'
+                }`}
+                title="Next annotation"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
         </h4>
-        {isPreservedList && onNavigateToAnnotationList && (
-          <button
-          onClick={onNavigateToAnnotationList}
-          className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded-full flex items-center transition-colors"
-          title="View all annotations in their full date range"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-          </svg>
-        </button>
-        )}
       </div>
   
       {/* Annotations List - Compact */}
@@ -265,20 +252,6 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
                 
                 {/* Edit/Delete Buttons - Smaller */}
                 <div className="flex space-x-1 ml-1 flex-shrink-0">
-                  {onEditAnnotation && annotation.id &&(
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEditAnnotation(annotation);
-                      }}
-                      className="text-blue-500 hover:text-blue-700 p-0.5 hover:bg-blue-50 rounded"
-                      title="Edit Annotation"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.379-8.379-2.828-2.828z" />
-                      </svg>
-                    </button>
-                  )}
                   {onDeleteAnnotation && annotation.id && (
                     <button 
                     onClick={(e) => {
