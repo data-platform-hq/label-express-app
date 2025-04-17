@@ -273,30 +273,58 @@ export async function searchFilterValues(
 ) {
 
   try {
+    // const response = await client.search({
+    //   index: indexName,
+    //   body: {
+    //     _source: filterField,
+    //     query: {
+    //       match_phrase_prefix: {
+    //         [`${filterField}`]: {
+    //           query: searchTerms,
+    //           slop: 10,
+    //           max_expansions: 50,
+    //         }
+    //       }
+    //     },
+    //   }
+    // });
+
     const response = await client.search({
       index: indexName,
       body: {
-        _source: filterField,
+        size: 0,
         query: {
-          match_phrase_prefix: {
+          wildcard: {
             [`${filterField}`]: {
-              query: searchTerms,
-              slop: 10,
-              max_expansions: 50,
+              value: `*${searchTerms}*`,
+              case_insensitive: true
             }
-          }
+
         },
+        },
+        aggs: {
+          unique_values: {
+            terms: {
+              field: filterField + '.keyword',
+              size: 1000,
+              order: {
+                _key: 'asc'
+              },
+            },
+          }
+        }
       }
     });
 
-    const values = response.body.hits.hits;
+    const values = response.body.aggregations?.unique_values;
 
-    // get unique values
-    const options = values.map((value: any) => value._source[filterField]);
-    const uniqueOptions = Array.from(new Set(options));
+    if (!values) {
+      console.error('No values found in response');
+      return [];
+    }
+    const options = (values as { buckets: { key: string }[] }).buckets.map((bucket) => bucket.key);
 
-    //return Array.from(new Set(options));
-    return uniqueOptions;
+    return options;
 
   } catch (error) {
     console.error('Error fetching filter values:', error);
