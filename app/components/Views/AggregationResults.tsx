@@ -1,12 +1,11 @@
 // components/AggregationResults.tsx
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { TimePoint, AggregationParams } from '@/app/components/types';
+import { TimePoint, AggregationParams } from '@/app/types/types';
 import ChartView from '@/app/components/Chart/ChartView';
-import AnnotationDetails from '@/app/components/Views/AnnotationDetails';
 import AnnotationSidebar from '@/app/components/Annotations/AnnotationSidebar';
 import AnnotationPopup from '@/app/components/Annotations/AnnotationPopup';
-import ResultsView from '@/app/components/Views/ResultsView';
+import AnnotationView from '@/app/components/Views/AnnotationView';
 import ViewControls from '@/app/components/Views/ViewControls';
 import VisualizationLayout from '@/app/components/Views/VisualizationLayout';
 import { useDataProcessor } from '@/app/components/Chart/DataProcessor';
@@ -372,10 +371,14 @@ export default function AggregationResults({
             /> 
       }
       footerContent={
-        <ResultsView 
-          params={params} 
-          results={results || []}
+        // if sidebar is open, show annotation details
+        showAnnotationSidebar && selectedAnnotation ? (
+        <AnnotationView 
+          //onUpdateAnnotation={handleAnnotationUpdate}
+          selectedAnnotation={selectedAnnotation}
+          
         />
+        ) : null
       }
       popupContent={
         showAnnotationPopup ? (

@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Annotation } from '@/app/components/types';
+import { Annotation } from '@/app/types/types';
 
 interface AnnotationSidebarProps {
   annotations: Annotation[];

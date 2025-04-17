@@ -1,6 +1,6 @@
 // utils/chartUtils.ts - Improved version for multi-axes charts
 import * as d3 from 'd3';
-import { TimePoint, Annotation } from '@/app/components/types';
+import { TimePoint, Annotation } from '@/app/types/types';
 
 export interface ChartDimensions {
   margin: { top: number; right: number; bottom: number; left: number };

@@ -10,7 +10,7 @@ import {
   deleteAnnotationRecord,
   searchFilterValues 
 } from '@/lib/opensearch';
-import { Annotation } from '@/app/components/types';
+import { Annotation } from '@/app/types/types';
 
 export async function fetchIndexFields(index: string) {
   if (!index) return { dateFields: [], termFields: [], numericFields: [] };

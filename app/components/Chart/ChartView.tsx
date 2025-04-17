@@ -1,10 +1,10 @@
 // components/ChartView.tsx
 import { useState, useRef, useEffect } from 'react';
-import { TimePoint, TooltipData, BrushMode, BrushSelection, Annotation } from '../types';
+import { TimePoint, TooltipData, BrushMode, BrushSelection, Annotation } from '../../types/types';
 import TimeSeriesChart from '@/app/components/Chart/TimeSeriesChart';
 import ScrollableLegend from '@/app/components/Chart/ScrollableLegend';
 import ChartTooltip from '@/app/components/Chart/ChartTooltip';
-import { AggregationParams } from '@/app/components/types';
+import { AggregationParams } from '@/app/types/types';
 
 interface ChartViewProps {
   results: TimePoint[];

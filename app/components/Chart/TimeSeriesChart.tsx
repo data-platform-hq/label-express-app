@@ -1,6 +1,6 @@
 // components/TimeSeriesChart.tsx
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { TimePoint, TooltipData, BrushMode, BrushSelection, Annotation } from '@/app/components/types';
+import { TimePoint, TooltipData, BrushMode, BrushSelection, Annotation } from '@/app/types/types';
 import { 
   setupChartDimensions, 
   createChartScales, 

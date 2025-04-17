@@ -1,5 +1,5 @@
 // components/AnnotationDetails.tsx
-import { TimePoint } from '@/app/components/types';
+import { TimePoint } from '@/app/types/types';
 
 interface AnnotationDetailsProps {
   results: TimePoint[];

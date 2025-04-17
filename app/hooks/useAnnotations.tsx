@@ -1,7 +1,7 @@
 // components/useAnnotations.tsx
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Annotation } from '@/app/components/types';
+import { Annotation } from '@/app/types/types';
 import { fetchAnnotationRecords, removeAnnotationRecord } from '@/app/utils/actions';
 import { useFormState } from '@/app/contexts/FormStateContext';
 import * as d3 from 'd3';

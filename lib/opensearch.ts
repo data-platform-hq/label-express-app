@@ -1,6 +1,6 @@
 // lib/opensearch.ts
 import { Client } from '@opensearch-project/opensearch';
-import { Annotation } from '@/app/components/types';
+import { Annotation } from '@/app/types/types';
 
 // Configure your OpenSearch client
 const client = new Client({

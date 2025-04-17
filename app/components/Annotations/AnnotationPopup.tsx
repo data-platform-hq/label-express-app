@@ -1,5 +1,5 @@
 // components/AnnotationPopup.tsx
-import { BrushSelection, Annotation } from '@/app/components/types';
+import { BrushSelection, Annotation } from '@/app/types/types';
 import AnnotationForm from '@/app/components/Annotations/AnnotationForm';
 import { saveAnnotationRecord } from '@/app/utils/actions';
 import { useSession } from "next-auth/react"

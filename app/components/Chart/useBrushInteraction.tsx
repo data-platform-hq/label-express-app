@@ -1,6 +1,6 @@
 // components/useBrushInteraction.tsx
 import { useState } from 'react';
-import { BrushMode, BrushSelection } from '@/app/components/types';
+import { BrushMode, BrushSelection } from '@/app/types/types';
 
 interface UseBrushInteractionResult {
   brushMode: BrushMode;

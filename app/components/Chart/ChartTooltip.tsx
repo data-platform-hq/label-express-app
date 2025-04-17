@@ -1,5 +1,5 @@
 // components/ChartTooltip.tsx
-import { TooltipData } from '@/app/components/types';
+import { TooltipData } from '@/app/types/types';
 
 interface ChartTooltipProps {
   tooltip: TooltipData;

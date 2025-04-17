@@ -1,6 +1,6 @@
 // components/DataProcessor.tsx
 import { useMemo } from 'react';
-import { TimePoint } from '@/app/components/types';
+import { TimePoint } from '@/app/types/types';
 import * as d3 from 'd3';
 
 interface ProcessedData {

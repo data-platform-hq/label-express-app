@@ -1,7 +1,7 @@
 // components/ChartTooltipHandler.tsx
 import { useEffect } from 'react';
 import * as d3 from 'd3';
-import { BrushMode, TimePoint, TooltipData } from '@/app/components/types';
+import { BrushMode, TimePoint, TooltipData } from '@/app/types/types';
 import { ChartScales, ChartDimensions } from '@/app/components/Chart/chartUtils';
 
 interface ChartTooltipHandlerProps {

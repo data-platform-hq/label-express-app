@@ -1,6 +1,6 @@
 // components/BrushModeSelector.tsx
 import React from 'react';
-import { BrushMode } from '@/app/components/types';
+import { BrushMode } from '@/app/types/types';
 
 interface BrushModeSelectorProps {
   brushMode: BrushMode;

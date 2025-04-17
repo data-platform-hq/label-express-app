@@ -1,6 +1,6 @@
 // components/ViewControls.tsx
 import React, { useState }from 'react';
-import { BrushMode } from '@/app/components/types';
+import { BrushMode } from '@/app/types/types';
 
 interface ViewControlsProps {
 
