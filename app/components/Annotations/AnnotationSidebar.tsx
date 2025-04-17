@@ -9,6 +9,7 @@ interface AnnotationSidebarProps {
   isLoading?: boolean;
   itemsPerPage?: number;
   onDateRangeChange?: (startDate: string, endDate: string) => void; // Provided by parent
+  onAnnotationSelect?: (annotation: Annotation) => void; // Callback for when an annotation is selected
 }
 
 const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
@@ -16,6 +17,7 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
   isLoading,
   itemsPerPage = 16,
   onDateRangeChange,
+  onAnnotationSelect,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   // Store the GLOBAL index of the selected annotation relative to the FULL 'annotations' prop list
@@ -31,7 +33,6 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
       // Compare lengths as a simple proxy for external list changes.
       // A more robust check might involve comparing IDs if lengths can be the same but content differs.
       if (annotations.length !== prevAnnotationsLengthRef.current) {
-          console.log("Sidebar: Detected external annotation list change. Resetting view.");
           setCurrentPage(1);
           setSelectedAnnotationGlobalIndex(null);
           prevAnnotationsLengthRef.current = annotations.length; // Update ref
@@ -79,16 +80,16 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
         onDateRangeChange(adjustedStartDate.toISOString(), adjustedEndDate.toISOString());
     }
 
-    // pass the annotation to the parent
-
-
   };
 
   // Select annotation by clicking on its item in the list
-  const handleAnnotationSelect = (annotation: Annotation, localIndexOnPage: number) => {
+  const handleAnnotationClick = (annotation: Annotation, localIndexOnPage: number) => {
     const globalIndex = indexOfFirstAnnotation + localIndexOnPage;
     setSelectedAnnotationGlobalIndex(globalIndex);
     triggerParentReload(annotation);
+    if (onAnnotationSelect) {
+        onAnnotationSelect(annotation); // Call the parent callback
+    }
   };
 
   // Previous Annotation Button
@@ -115,6 +116,9 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
       }
       setSelectedAnnotationGlobalIndex(targetGlobalIndex);
       triggerParentReload(targetAnnotation);
+      if (onAnnotationSelect) {
+          onAnnotationSelect(targetAnnotation); // Call the parent callback
+      }
     }
   };
 
@@ -139,6 +143,9 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
        }
       setSelectedAnnotationGlobalIndex(targetGlobalIndex);
       triggerParentReload(targetAnnotation);
+      if (onAnnotationSelect) {
+          onAnnotationSelect(targetAnnotation); // Call the parent callback
+      }
     }
   };
 
@@ -239,7 +246,7 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
                   : `${borderColorClass} border-opacity-50`
               }`}
               style={borderStyle}
-              onClick={() => handleAnnotationSelect(annotationItem, localIndexOnPage)}
+              onClick={() => handleAnnotationClick(annotationItem, localIndexOnPage)}
             >
               <div className="flex justify-between items-center">
                 <div className="flex items-center overflow-hidden">

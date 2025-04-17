@@ -10,8 +10,8 @@ interface UseAnnotationsResult {
   annotations: Annotation[];
   isLoadingAnnotations: boolean;
   loadAnnotations: () => Promise<void>;
-  handleDeleteAnnotation: (documentId: string) => Promise<void>;
-  handleUpdateAnnotation: (documentId: string, actionType: string, update: any) => Promise<void>;
+  deleteAnnotation: (documentId: string) => Promise<void>;
+  updateAnnotation: (documentId: string, actionType: string, update: any) => Promise<void>;
 }
 
 // Helper function to get or generate color for an annotation type
@@ -160,7 +160,7 @@ export function useAnnotations(): UseAnnotationsResult {
     }
   }, [startDate, endDate, filterField, filterValue, selectedIndex, loadAnnotations]);
   
-  const handleDeleteAnnotation = async (id: string) => {
+  const deleteAnnotation = async (id: string) => {
     try {
       await removeAnnotationRecord(id);
       // After deleting, reload annotations
@@ -170,7 +170,7 @@ export function useAnnotations(): UseAnnotationsResult {
     }
   };
 
-  const handleUpdateAnnotation = async (id: string, actionType: string, update: any) => {
+  const updateAnnotation = async (id: string, actionType: string, update: any) => {
     try {
       await updateAnnotationRecord(id, actionType, update);
       // After deleting, reload annotations
@@ -185,7 +185,7 @@ export function useAnnotations(): UseAnnotationsResult {
     annotations,
     isLoadingAnnotations,
     loadAnnotations,
-    handleDeleteAnnotation,
-    handleUpdateAnnotation
+    deleteAnnotation,
+    updateAnnotation
   };
 }
