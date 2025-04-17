@@ -78,6 +78,10 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
         // Call the handler provided by the parent (which now sets the ref in parent)
         onDateRangeChange(adjustedStartDate.toISOString(), adjustedEndDate.toISOString());
     }
+
+    // pass the annotation to the parent
+
+
   };
 
   // Select annotation by clicking on its item in the list

@@ -164,10 +164,7 @@ export default function AggregationResults({
     <VisualizationLayout
       showAnnotationSidebar={showAnnotationSidebar}
       sidebarContent={
-        // Pass the potentially preserved list and the special handler
         <AnnotationSidebar
-          // Key prop helps React reset state if needed, but might not be necessary here
-          // key={displayedSidebarAnnotations.map(a => a.id).join('-')} // Optional: force re-mount if list content changes drastically
           annotations={displayedSidebarAnnotations} // Pass the state managed by the parent
           isLoading={isLoadingAnnotations}
           onDateRangeChange={handleSidebarDateRangeChange} // Pass the wrapper function
@@ -179,7 +176,6 @@ export default function AggregationResults({
           setShowAnnotationSidebar={setShowAnnotationSidebar}
           brushMode={brushMode}
           setBrushMode={setBrushMode}
-          // Use original handlers for controls that are external triggers
           onZoomHistory={handleZoomHistory}
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
