@@ -7,6 +7,7 @@ import FilterValueSelector from '@/app/components/FieldsSelector/FilterValueSele
 import DateRangePicker from '@/app/components/FieldsSelector/DateRangePicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { calculateOptimalInterval } from '@/app/components/FieldsSelector/intervalUtils';
+import { useFormState } from '@/app/contexts/FormStateContext';
 
 interface AggregationFormProps {
   indices: string[];
@@ -50,6 +51,8 @@ export default function AggregationForm({
   loading
 }: AggregationFormProps) {
   const [isCompact, setIsCompact] = useState(true);
+
+  const { resetState } = useFormState();
 
   const isFormValid =
     formState.selectedIndex && 
@@ -267,6 +270,14 @@ export default function AggregationForm({
                     onStartDateChange={setters.setStartDate}
                     onEndDateChange={setters.setEndDate}
                   />
+                  {/* Reset saved state button */}
+                  <button
+                    type="button"
+                    onClick={resetState}
+                    className="text-sm text-gray-500 hover:text-gray-700 px-3 py-1 rounded hover:bg-gray-100"
+                  >
+                    Reset Saved Settings
+                  </button>
           </div>
         </form>
       )}

@@ -129,17 +129,6 @@ export default function FieldSelector({ indices }: FieldSelectorProps) {
           onZoomHistory={onZoomHistory}
         />
       </div>
-      
-      {/* Reset saved state button */}
-      <div className="text-right w-full mt-2 mb-4">
-        <button
-          type="button"
-          onClick={resetState}
-          className="text-sm text-gray-500 hover:text-gray-700 px-3 py-1 rounded hover:bg-gray-100"
-        >
-          Reset Saved Settings
-        </button>
-      </div>
     </div>
   );
 }
