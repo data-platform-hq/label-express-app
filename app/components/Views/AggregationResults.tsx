@@ -33,24 +33,6 @@ export default function AggregationResults({
 
   const [showAnnotationSidebar, setShowAnnotationSidebar] = useState(false);
   const [showAnnotationPopup, setShowAnnotationPopup] = useState(false);
-
-  // State to preserve the full list of annotations
-  const [annotationList, setAnnotationList] = useState<any[]>([]);
-  
-  // Flag to track if we're navigating to an annotation
-  const [isNavigatingToAnnotation, setIsNavigatingToAnnotation] = useState(false);
-  
-  // Reference to track if we've loaded the full list
-  const fullListLoadedRef = useRef(false);
-  
-  // Add a state to track when a new annotation is created
-  const [newAnnotationCreated, setNewAnnotationCreated] = useState(false);
-
-  // Add a state for tracking loading of new annotations
-  const [isLoadingNewAnnotation, setIsLoadingNewAnnotation] = useState(false);
-
-  // Add this state near your other state declarations
-  const [selectedAnnotation, setSelectedAnnotation] = useState<any | null>(null);
   
   // Use custom hooks to extract terms and color scale
   const { uniqueTerms, colorScale } = useDataProcessor(results || []);
@@ -61,8 +43,6 @@ export default function AggregationResults({
     annotations, 
     isLoadingAnnotations, 
     loadAnnotations, 
-    handleDeleteAnnotation,
-    handleUpdateAnnotation,
   } = useAnnotations();
 
   const {
@@ -73,71 +53,9 @@ export default function AggregationResults({
     resetBrushSelection
   } = useBrushInteraction(onDateRangeChange, () => setShowAnnotationPopup(true));
 
-  // Effect to manage the annotation list
-  useEffect(() => {
-
-    // Skip if we're still loading and this isn't a new annotation
-    if (isLoadingAnnotations && !newAnnotationCreated) {
-      return;
-    }
-    
-    // If we're navigating to an annotation, don't update the list unless it's a new annotation
-    if (isNavigatingToAnnotation && !newAnnotationCreated) {
-      return;
-    }
-    
-    // If we have annotations and either:
-    // 1. We haven't loaded the full list yet, OR
-    // 2. We're in the initial state (brushMode === 'disabled'), OR
-    // 3. We're in zoom mode (which means user explicitly zoomed), OR
-    // 4. A new annotation was just created
-    if (annotations.length > 0 && 
-        (!fullListLoadedRef.current || 
-         brushMode === 'disabled' || 
-         brushMode === 'zoom' || 
-         newAnnotationCreated)) {      
-      
-      // If a new annotation was created, append it to the existing list
-      if (newAnnotationCreated && annotationList.length > 0) {
-        // Find annotations that aren't already in the list
-        const existingIds = new Set(annotationList.map(a => a.id));
-        const newAnnotations = annotations.filter(a => !existingIds.has(a.id));
-        
-        if (newAnnotations.length > 0) {
-          setAnnotationList(prev => [...prev, ...newAnnotations]);
-        } else {
-          // Fallback to replacing the list if we can't find new ones
-          setAnnotationList(annotations);
-        }
-      } else {
-        // Otherwise just replace the list
-        setAnnotationList(annotations);
-      }
-      
-      // Mark that we've loaded the full list
-      if (brushMode === 'disabled') {
-        fullListLoadedRef.current = true;
-      }
-      
-      // Reset the new annotation flag
-      if (newAnnotationCreated) {
-        setNewAnnotationCreated(false);
-        setIsLoadingNewAnnotation(false);
-      }
-    }
-  }, [isLoadingAnnotations, annotations, brushMode, isNavigatingToAnnotation, newAnnotationCreated, annotationList]);
-
-
-
 
   // Modify your handleZoomHistory function
   const handleZoomHistory = useCallback(() => {
-    
-    setSelectedAnnotation(null);
-    setAnnotationList([]);
-    setIsNavigatingToAnnotation(false); 
-    fullListLoadedRef.current = false;
-    setIsLoadingNewAnnotation(false);
     
     // Call the provided zoom out handler
     onZoomHistory();
@@ -185,81 +103,13 @@ export default function AggregationResults({
 
   }
 
-  // Handle navigation to a specific annotation
-  const handleNavigateAnnotation = useCallback((annotation: any) => {
-    // Set flag that we're navigating to an annotation
-    setIsNavigatingToAnnotation(true);
-
-    // Store the selected annotation
-    setSelectedAnnotation(annotation);
-
-    const startDate = new Date(annotation.startDate);
-    const endDate = new Date(annotation.endDate);
-
-    // Calculate the duration of the annotation
-    const duration = endDate.getTime() - startDate.getTime();
-
-    // Calculate 10% offsets
-    const offset = Math.max(duration * 0.1, 60000); // At least 1 minute offset
-  
-    // Apply offsets to create adjusted dates
-    const adjustedStartDate = new Date(startDate.getTime() - offset);
-    const adjustedEndDate = new Date(endDate.getTime() + offset);
-    
-    // Call the onDateRangeChange function with the new date range
-    if (onDateRangeChange) {
-      onDateRangeChange(adjustedStartDate.toISOString(), adjustedEndDate.toISOString());
-    }
-  }, [onDateRangeChange]);
-
-  // Handle annotation deletion
-  const handleAnnotationDeletion = useCallback(async (id: string) => {
-    // Delete the annotation
-    await handleDeleteAnnotation(id);
-    
-    // Also remove it from our local list
-    setAnnotationList(prev => prev.filter(a => a.id !== id));
-  }, [handleDeleteAnnotation]);
-
-  // Handle annotation update
-  const handleAnnotationUpdate = useCallback(async (id: string, actionType: string, update: any) => {
-    // Update the annotation
-    await handleUpdateAnnotation(id, actionType, update);
-
-    if (actionType === 'delete') {
-      // Remove the annotation from the local list
-      setAnnotationList(prev => prev.filter(a => a.id !== id));
-      setSelectedAnnotation(null);
-    }
-    else {
-      // Update the annotation in the local list
-      setAnnotationList(prev => { 
-        const index = prev.findIndex(a => a.id === id);
-        if (index !== -1) {
-          const updatedAnnotations = [...prev];
-          updatedAnnotations[index] = { ...updatedAnnotations[index], ...update };
-          return updatedAnnotations;
-        }
-        return prev;
-      }
-      );
-    }
-    
-  }, [handleUpdateAnnotation]);
-
   // Handle successful annotation creation
   const handleAnnotationCreated = useCallback(() => {
     
     // Close popup and reset brush
     setShowAnnotationPopup(false);
     resetBrushSelection();
-    
-    // Show loading indicator
-    setIsLoadingNewAnnotation(true);
-    
-    // Set flag that we've created a new annotation
-    setNewAnnotationCreated(true);
-    
+        
     // Force reload annotations with a delay to ensure backend has processed it
     setTimeout(() => {
       loadAnnotations();
@@ -327,11 +177,12 @@ export default function AggregationResults({
       showAnnotationSidebar={showAnnotationSidebar}
       sidebarContent={
         <AnnotationSidebar 
-          annotations={annotationList}
-          isLoading={isLoadingAnnotations && annotationList.length === 0}
-          onDeleteAnnotation={handleAnnotationDeletion}
-          onNavigateAnnotation={handleNavigateAnnotation}
-          isPreservedList={isNavigatingToAnnotation}
+          annotations={annotations}
+          isLoading={isLoadingAnnotations}
+          onDateRangeChange={onDateRangeChange}
+          // onDeleteAnnotation={handleAnnotationDeletion}
+          // onNavigateAnnotation={handleNavigateAnnotation}
+          // isPreservedList={isNavigatingToAnnotation}
         />
       }
       controlsContent={
@@ -363,14 +214,15 @@ export default function AggregationResults({
             /> 
       }
       footerContent={
-        // if sidebar is open, show annotation details
-        showAnnotationSidebar && selectedAnnotation ? (
-        <AnnotationView 
-          onUpdateAnnotation={handleAnnotationUpdate}
-          selectedAnnotation={selectedAnnotation}
-          onDeleteAnnotation={handleAnnotationDeletion}        
-        />
-        ) : null
+        null
+        // // if sidebar is open, show annotation details
+        // showAnnotationSidebar && selectedAnnotation ? (
+        // <AnnotationView 
+        //   onUpdateAnnotation={handleAnnotationUpdate}
+        //   selectedAnnotation={selectedAnnotation}
+        //   onDeleteAnnotation={handleAnnotationDeletion}        
+        // />
+        // ) : null
       }
       popupContent={
         showAnnotationPopup ? (
@@ -388,8 +240,6 @@ export default function AggregationResults({
               // After creating a new annotation, reload annotations
               // and reset the navigation flag to update the list
               loadAnnotations();
-              setIsNavigatingToAnnotation(false);
-              fullListLoadedRef.current = false;
             }} 
             aggregationParams={params}
           />
