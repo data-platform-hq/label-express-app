@@ -22,8 +22,14 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
   const [selectedAnnotationGlobalIndex, setSelectedAnnotationGlobalIndex] = useState<number | null>(null);
   const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
   
-  // Reference to the previous annotations array for comparison
+  // Reference to the previous annotations array and selected page for comparison
   const prevAnnotationsRef = useRef<Annotation[]>([]);
+  const selectedPageRef = useRef<number>(1); // Track which page the selected annotation was on
+
+  // Update the selected page reference whenever currentPage changes
+  useEffect(() => {
+    selectedPageRef.current = currentPage;
+  }, [currentPage]);
 
   // Effect to handle annotation list changes while preserving selection when appropriate
   useEffect(() => {
@@ -43,12 +49,17 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
           setCurrentPage(Math.floor(newIndex / itemsPerPage) + 1);
         } else {
           // Selected annotation was removed
-          // Check if the current page still exists
+          // Calculate the new total pages
           const newTotalPages = Math.max(1, Math.ceil(annotations.length / itemsPerPage));
-          if (currentPage > newTotalPages) {
-            // Current page no longer exists, go to the last page
+          
+          // Try to stay on the same page number if it still exists
+          if (selectedPageRef.current <= newTotalPages) {
+            setCurrentPage(selectedPageRef.current);
+          } else {
+            // The page no longer exists, go to the last page
             setCurrentPage(newTotalPages);
           }
+          
           // Clear selection since the annotation is gone
           setSelectedAnnotationGlobalIndex(null);
           setSelectedAnnotationId(null);
@@ -68,7 +79,7 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
     
     // Update the reference to the current annotations
     prevAnnotationsRef.current = annotations;
-  }, [annotations, itemsPerPage, currentPage, selectedAnnotationId]);
+  }, [annotations, itemsPerPage, selectedAnnotationId]);
 
   // Effect to keep currentPage within bounds if annotations or itemsPerPage changes
   useEffect(() => {
@@ -108,6 +119,9 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
     const globalIndex = indexOfFirstAnnotation + localIndexOnPage;
     setSelectedAnnotationGlobalIndex(globalIndex);
     setSelectedAnnotationId(annotation.id ?? null); // Store the ID for persistence
+    // Update the selected page reference
+    selectedPageRef.current = currentPage;
+    
     triggerParentReload(annotation);
     console.log(`Page: ${currentPage}, Index: ${globalIndex}`);
     if (onAnnotationSelect) {
@@ -136,6 +150,9 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
       }
       setSelectedAnnotationGlobalIndex(targetGlobalIndex);
       setSelectedAnnotationId(targetAnnotation.id ?? null);
+      // Update the selected page reference
+      selectedPageRef.current = targetPage;
+      
       triggerParentReload(targetAnnotation);
       if (onAnnotationSelect) {
         onAnnotationSelect(targetAnnotation);
@@ -162,7 +179,10 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
         setCurrentPage(targetPage);
       }
       setSelectedAnnotationGlobalIndex(targetGlobalIndex);
-      setSelectedAnnotationId(targetAnnotation.id ?? null);
+      setSelectedAnnotationId(targetAnnotation.id);
+      // Update the selected page reference
+      selectedPageRef.current = targetPage;
+      
       triggerParentReload(targetAnnotation);
       if (onAnnotationSelect) {
         onAnnotationSelect(targetAnnotation);
