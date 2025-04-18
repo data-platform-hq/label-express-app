@@ -6,6 +6,15 @@ import { fetchAnnotationRecords, updateAnnotationRecord } from '@/app/utils/acti
 import { useFormState } from '@/app/contexts/FormStateContext';
 import * as d3 from 'd3';
 
+
+interface PrevStateRefType {
+  startDate?: string | undefined;
+  endDate?: string | undefined;
+  filterField?: string | undefined;
+  filterValue?: string | undefined;
+  selectedIndex?: string | undefined;
+}
+
 interface UpdateResult {
   success: boolean;
   updatedAnnotation?: Annotation | null; // Include the updated annotation data
@@ -76,7 +85,7 @@ export function useAnnotations(): UseAnnotationsResult {
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [isLoadingAnnotations, setIsLoadingAnnotations] = useState(false);
   const { selectedIndex, startDate, endDate, filterField, filterValue } = useFormState();
-  const prevStateRef = useRef({});
+  const prevStateRef = useRef<PrevStateRefType>({});
   const isLoadingRef = useRef(false);
 
   const loadAnnotations = useCallback(async () => {
@@ -147,7 +156,6 @@ export function useAnnotations(): UseAnnotationsResult {
     ): Promise<UpdateResult> => {
     try {
       // Call the backend
-      // Assuming updateAnnotationRecord handles both update and soft delete logic
       const backendResult = await updateAnnotationRecord(id, actionType, updatePayload);
 
       // If backend indicates success (modify based on actual return value)
