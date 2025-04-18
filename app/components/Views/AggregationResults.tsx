@@ -62,11 +62,9 @@ export default function AggregationResults({
   // Effect to update sidebar list based on fetchedAnnotations
   useEffect(() => {
     if (isSidebarNavigationTriggerRef.current) {
-      console.log("Parent: Sidebar navigation active, preserving sidebar list.");
       isSidebarNavigationTriggerRef.current = false;
       // Keep displayedSidebarAnnotations as they are
     } else {
-      console.log("Parent: Updating sidebar annotations from fetched data. Count:", fetchedAnnotations?.length);
       // Use the LATEST fetched annotations from the hook
       // This will now also reflect immediate updates made within the hook
       setDisplayedSidebarAnnotations(fetchedAnnotations || []);
@@ -76,7 +74,6 @@ export default function AggregationResults({
 
   // --- Sidebar Navigation Handler ---
   const handleSidebarDateRangeChange = useCallback((startDate: string, endDate: string) => {
-      console.log("Parent: Sidebar navigation triggered date change.");
       // Set the flag *before* calling the original handler
       isSidebarNavigationTriggerRef.current = true;
       // Call the original handler to actually change the date range and trigger data fetch
@@ -89,7 +86,6 @@ export default function AggregationResults({
     actionType: 'update' | 'delete',
     updatePayload: any
   ): Promise<boolean> => {
-    console.log(`Parent: Handling annotation ${actionType}:`, id);
 
     // --- START: Determine the correct refresh range ---
     let refreshStartDate = startDate; // Default to current form state
@@ -105,10 +101,9 @@ export default function AggregationResults({
             if (isFinite(minTime) && isFinite(maxTime)) {
                  const duration = maxTime - minTime;
                  // Add padding (e.g., 10% on each side, or minimum 1 minute)
-                 const padding = Math.max(duration * 0.1, 60 * 1000);
+                 const padding = Math.max(duration * 0.01, 60 * 1000);
                  refreshStartDate = new Date(minTime - padding).toISOString();
                  refreshEndDate = new Date(maxTime + padding).toISOString();
-                 console.log(`Parent: Calculated refresh range based on displayed list: ${refreshStartDate} to ${refreshEndDate}`);
             } else {
                  console.warn("Parent: Could not determine valid min/max date from displayed annotations, using form state range for refresh.");
             }
@@ -127,7 +122,6 @@ export default function AggregationResults({
       const result = await updateAnnotation(id, actionType, updatePayload);
 
       if (result.success) {
-        console.log(`Parent: Annotation ${actionType} successful for ID: ${id}`);
 
         // 2. Update local selected state if needed (using data from hook result)
         if (actionType === 'update' && result.updatedAnnotation) {
@@ -143,7 +137,6 @@ export default function AggregationResults({
         }
 
         // 3. Trigger a data fetch using the CALCULATED WIDER range
-        console.log(`Parent: Triggering data refresh with range: ${refreshStartDate} to ${refreshEndDate}`);
         // Ensure the flag is FALSE so the sidebar DOES update
         isSidebarNavigationTriggerRef.current = false;
         // Call the main date range change handler to fetch ALL data (chart + annotations) for the wider range
@@ -232,7 +225,6 @@ export default function AggregationResults({
   setSelectedAnnotation(annotation);
   setShowAnnotationView(true);
 
-  console.log("Parent: Annotation selected:", annotation);
 
   }, []);
 

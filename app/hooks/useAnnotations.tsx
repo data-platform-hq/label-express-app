@@ -76,7 +76,7 @@ export function useAnnotations(): UseAnnotationsResult {
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [isLoadingAnnotations, setIsLoadingAnnotations] = useState(false);
   const { selectedIndex, startDate, endDate, filterField, filterValue } = useFormState();
-  const prevStateRef = useRef({ /* ... */ });
+  const prevStateRef = useRef({});
   const isLoadingRef = useRef(false);
 
   const loadAnnotations = useCallback(async () => {
@@ -85,7 +85,6 @@ export function useAnnotations(): UseAnnotationsResult {
     }
     isLoadingRef.current = true;
     setIsLoadingAnnotations(true);
-    console.log("useAnnotations: Loading annotations for range:", startDate, "to", endDate);
     try {
       const startDateStr = startDate;
       const endDateStr = endDate;
@@ -109,7 +108,6 @@ export function useAnnotations(): UseAnnotationsResult {
         status: a.status,
       }));
 
-      console.log("useAnnotations: Fetched and processed annotations:", processedAnnotations.length);
       setAnnotations(processedAnnotations); // Update state
     } catch (error) {
       console.error('Error loading annotations:', error);
@@ -136,7 +134,6 @@ export function useAnnotations(): UseAnnotationsResult {
     // Only load if range or filters change significantly
     // Or if it's the initial load (prevState is empty)
     if (startDateChanged || endDateChanged || filterFieldChanged || filterValueChanged || indexChanged || annotations.length === 0 ) {
-         console.log("useAnnotations: Triggering loadAnnotations due to state change.");
          loadAnnotations();
     }
   }, [startDate, endDate, filterField, filterValue, selectedIndex, loadAnnotations, annotations.length]); // Add annotations.length dependency
@@ -171,7 +168,6 @@ export function useAnnotations(): UseAnnotationsResult {
                       ann.id === id ? updatedAnnotationData : ann
                   )
               );
-              console.log("useAnnotations: Updated annotation locally:", id);
               return { success: true, updatedAnnotation: updatedAnnotationData };
 
           } else if (actionType === 'delete') {
@@ -179,7 +175,6 @@ export function useAnnotations(): UseAnnotationsResult {
               setAnnotations(prevAnnotations =>
                   prevAnnotations.filter(ann => ann.id !== id)
               );
-               console.log("useAnnotations: Deleted annotation locally:", id);
               return { success: true, deletedId: id };
           }
       }
