@@ -5,7 +5,7 @@ import { TimePoint, AggregationParams, Annotation } from '@/app/types/types'; //
 import ChartView from '@/app/components/Chart/ChartView';
 import AnnotationSidebar from '@/app/components/Annotations/AnnotationSidebar';
 import AnnotationPopup from '@/app/components/Annotations/AnnotationPopup';
-// import AnnotationView from '@/app/components/Views/AnnotationView'; // Keep if needed elsewhere
+import AnnotationView from '@/app/components/Views/AnnotationView'; // Keep if needed elsewhere
 import ViewControls from '@/app/components/Views/ViewControls';
 import VisualizationLayout from '@/app/components/Views/VisualizationLayout';
 import { useDataProcessor } from '@/app/components/Chart/DataProcessor';
@@ -30,6 +30,10 @@ export default function AggregationResults({
 
   const [showAnnotationSidebar, setShowAnnotationSidebar] = useState(false);
   const [showAnnotationPopup, setShowAnnotationPopup] = useState(false);
+
+  // state for selected annotation and annotation view visibility
+  const [selectedAnnotation, setSelectedAnnotation] = useState<Annotation | null>(null);
+  const [showAnnotationView, setShowAnnotationView] = useState(false);
 
   // Ref to track if the date range change was triggered by the AnnotationSidebar navigation
   const isSidebarNavigationTriggerRef = useRef(false);
@@ -150,6 +154,22 @@ export default function AggregationResults({
     originalOnDateRangeChange(newStart.toISOString(), newEnd.toISOString());
   }, [originalOnDateRangeChange, startDate, endDate]);
 
+  // Add handler for annotation selection
+  const handleAnnotationSelect = useCallback((annotation: Annotation) => {
+  setSelectedAnnotation(annotation);
+  setShowAnnotationView(true);
+
+  console.log("Parent: Annotation selected:", annotation);
+
+  }, []);
+
+  const handleAnnotationUpdate = async (id: string, actionType: string, updatePayload: any) => {
+    console.log("Parent: Updating annotation with ID:", id, "Action Type:", actionType, "Payload:", updatePayload);
+
+    // if action is update then keep the annotation view open, run annotations update (it will update only one annotation), reload annotations but with previous date range
+
+  }
+
   const parseTimeInterval = (interval: string): number => {
     const value = parseInt(interval.match(/\d+/)?.[0] || '15', 10);
     if (interval.includes('m')) return value * 60 * 1000;
@@ -168,6 +188,7 @@ export default function AggregationResults({
           annotations={displayedSidebarAnnotations} // Pass the state managed by the parent
           isLoading={isLoadingAnnotations}
           onDateRangeChange={handleSidebarDateRangeChange} // Pass the wrapper function
+          onAnnotationSelect={handleAnnotationSelect} // Pass the selection handler
         />
       }
       controlsContent={
@@ -199,7 +220,12 @@ export default function AggregationResults({
         />
       }
       footerContent={
-        null // Your AnnotationView logic if needed
+        showAnnotationView ? (
+          <AnnotationView
+            selectedAnnotation={selectedAnnotation}
+            onUpdateAnnotation={handleAnnotationUpdate}
+          />
+        ) : null
       }
       popupContent={
         showAnnotationPopup ? (
