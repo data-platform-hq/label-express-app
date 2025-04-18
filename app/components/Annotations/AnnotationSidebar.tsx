@@ -179,7 +179,7 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
         setCurrentPage(targetPage);
       }
       setSelectedAnnotationGlobalIndex(targetGlobalIndex);
-      setSelectedAnnotationId(targetAnnotation.id);
+      setSelectedAnnotationId(targetAnnotation.id ?? null);
       // Update the selected page reference
       selectedPageRef.current = targetPage;
       
