@@ -27,30 +27,25 @@ export default function AggregationResults({
   onZoomHistory = () => {},
 }: AggregationResultsProps) {
   const { startDate, endDate, interval } = useFormState();
-
   const [showAnnotationSidebar, setShowAnnotationSidebar] = useState(false);
   const [showAnnotationPopup, setShowAnnotationPopup] = useState(false);
-
-  // state for selected annotation and annotation view visibility
   const [selectedAnnotation, setSelectedAnnotation] = useState<Annotation | null>(null);
   const [showAnnotationView, setShowAnnotationView] = useState(false);
-
-  // Ref to track if the date range change was triggered by the AnnotationSidebar navigation
   const isSidebarNavigationTriggerRef = useRef(false);
-
-  // State to hold the annotations currently displayed in the sidebar
-  // This list might be preserved during sidebar navigation triggers.
   const [displayedSidebarAnnotations, setDisplayedSidebarAnnotations] = useState<Annotation[]>([]);
-
-  // Use custom hooks
+  const lastExternalRangeRef = useRef<{ start: string | null; end: string | null }>({ start: null, end: null });
   const { uniqueTerms, colorScale } = useDataProcessor(results || []);
+
 
   // useAnnotations hook - Fetches annotations based on current context/range
   const {
-    annotations: fetchedAnnotations, // Rename the result from the hook
+    annotations: fetchedAnnotations,
     isLoadingAnnotations,
     loadAnnotations,
-  } = useAnnotations(); // Assuming this hook reacts to startDate/endDate changes internally
+    updateAnnotation, 
+  } = useAnnotations();
+
+
 
   const {
     brushMode,
@@ -64,27 +59,22 @@ export default function AggregationResults({
       () => setShowAnnotationPopup(true)
   );
 
-  // --- Effect to decide which annotations to display in the sidebar ---
+  // Effect to update sidebar list based on fetchedAnnotations
   useEffect(() => {
-    // If the flag is set, it means the fetch was likely triggered
-    // by the sidebar's navigation. We want to *keep* the existing sidebar list.
     if (isSidebarNavigationTriggerRef.current) {
-      console.log("Parent: Ignoring fetchedAnnotations update for sidebar due to internal navigation.");
-      // Reset the flag for the next potential external update
+      console.log("Parent: Sidebar navigation active, preserving sidebar list.");
       isSidebarNavigationTriggerRef.current = false;
-      // Do NOT update displayedSidebarAnnotations
+      // Keep displayedSidebarAnnotations as they are
     } else {
-      // If it's an external update (brush, zoom, history, initial load, creation),
-      // update the sidebar list with the newly fetched annotations.
-      console.log("Parent: Updating sidebar annotations from fetched data.");
-      setDisplayedSidebarAnnotations(fetchedAnnotations || []); // Use fetched data
+      console.log("Parent: Updating sidebar annotations from fetched data. Count:", fetchedAnnotations?.length);
+      // Use the LATEST fetched annotations from the hook
+      // This will now also reflect immediate updates made within the hook
+      setDisplayedSidebarAnnotations(fetchedAnnotations || []);
     }
-    // Dependency: This effect runs when new annotations are fetched by the hook.
-  }, [fetchedAnnotations]);
+  }, [fetchedAnnotations]); // Depend on fetchedAnnotations
 
 
-  // --- Wrapper function passed to the AnnotationSidebar ---
-  // This function signals that the sidebar initiated the date change.
+  // --- Sidebar Navigation Handler ---
   const handleSidebarDateRangeChange = useCallback((startDate: string, endDate: string) => {
       console.log("Parent: Sidebar navigation triggered date change.");
       // Set the flag *before* calling the original handler
@@ -93,6 +83,90 @@ export default function AggregationResults({
       originalOnDateRangeChange(startDate, endDate);
   }, [originalOnDateRangeChange]);
 
+  // --- Refined Handler for Annotation Updates/Deletes ---
+  const handleAnnotationUpdate = useCallback(async (
+    id: string,
+    actionType: 'update' | 'delete',
+    updatePayload: any
+  ): Promise<boolean> => {
+    console.log(`Parent: Handling annotation ${actionType}:`, id);
+
+    // --- START: Determine the correct refresh range ---
+    let refreshStartDate = startDate; // Default to current form state
+    let refreshEndDate = endDate;   // Default to current form state
+
+    if (displayedSidebarAnnotations && displayedSidebarAnnotations.length > 0) {
+        // Calculate range based on the *currently displayed list* in the sidebar
+        try {
+            const dates = displayedSidebarAnnotations.flatMap(a => [new Date(a.startDate).getTime(), new Date(a.endDate).getTime()]);
+            const minTime = Math.min(...dates);
+            const maxTime = Math.max(...dates);
+
+            if (isFinite(minTime) && isFinite(maxTime)) {
+                 const duration = maxTime - minTime;
+                 // Add padding (e.g., 10% on each side, or minimum 1 minute)
+                 const padding = Math.max(duration * 0.1, 60 * 1000);
+                 refreshStartDate = new Date(minTime - padding).toISOString();
+                 refreshEndDate = new Date(maxTime + padding).toISOString();
+                 console.log(`Parent: Calculated refresh range based on displayed list: ${refreshStartDate} to ${refreshEndDate}`);
+            } else {
+                 console.warn("Parent: Could not determine valid min/max date from displayed annotations, using form state range for refresh.");
+            }
+        } catch (e) {
+             console.error("Parent: Error calculating refresh range from displayed annotations:", e);
+             // Fallback to form state range already assigned
+        }
+    } else {
+        console.warn("Parent: displayedSidebarAnnotations is empty, using form state range for refresh.");
+    }
+    // --- END: Determine the correct refresh range ---
+
+
+    try {
+      // 1. Call the hook to update backend and hook's internal state
+      const result = await updateAnnotation(id, actionType, updatePayload);
+
+      if (result.success) {
+        console.log(`Parent: Annotation ${actionType} successful for ID: ${id}`);
+
+        // 2. Update local selected state if needed (using data from hook result)
+        if (actionType === 'update' && result.updatedAnnotation) {
+          if (selectedAnnotation && selectedAnnotation.id === id) {
+            setSelectedAnnotation(result.updatedAnnotation);
+          }
+          setShowAnnotationView(true); // Keep view open for update
+        } else if (actionType === 'delete') {
+          if (selectedAnnotation && selectedAnnotation.id === id) {
+            setSelectedAnnotation(null);
+            setShowAnnotationView(false); // Close view for delete
+          }
+        }
+
+        // 3. Trigger a data fetch using the CALCULATED WIDER range
+        console.log(`Parent: Triggering data refresh with range: ${refreshStartDate} to ${refreshEndDate}`);
+        // Ensure the flag is FALSE so the sidebar DOES update
+        isSidebarNavigationTriggerRef.current = false;
+        // Call the main date range change handler to fetch ALL data (chart + annotations) for the wider range
+        originalOnDateRangeChange(refreshStartDate, refreshEndDate);
+
+        return true; // Indicate success
+
+      } else {
+        console.error(`Parent: Annotation ${actionType} failed for ID: ${id}`);
+        return false; // Indicate failure
+      }
+    } catch (error) {
+      console.error(`Parent: Error during annotation ${actionType}:`, error);
+      return false; // Indicate failure
+    }
+  }, [
+      selectedAnnotation,
+      updateAnnotation,
+      displayedSidebarAnnotations, // Need this list to calculate range
+      originalOnDateRangeChange, // Need this to trigger the refresh
+      startDate, // Need current start date as fallback
+      endDate    // Need current end date as fallback
+  ]);
 
   // --- Other Handlers ---
 
@@ -125,12 +199,11 @@ export default function AggregationResults({
   const handleAnnotationCreated = useCallback(() => {
     setShowAnnotationPopup(false);
     resetBrushSelection();
-    // Ensure the flag is false so the new list is loaded after creation
-    isSidebarNavigationTriggerRef.current = false;
-    setTimeout(() => {
-      loadAnnotations(); // This will trigger a fetch and the useEffect above
-    }, 500); // Reduced delay slightly
+    isSidebarNavigationTriggerRef.current = false; // Ensure list is refreshed
+    // Load annotations directly to get the new one
+    loadAnnotations();
   }, [loadAnnotations, resetBrushSelection]);
+
 
   const handleZoomIn = useCallback(() => {
     isSidebarNavigationTriggerRef.current = false; // External trigger
@@ -162,13 +235,6 @@ export default function AggregationResults({
   console.log("Parent: Annotation selected:", annotation);
 
   }, []);
-
-  const handleAnnotationUpdate = async (id: string, actionType: string, updatePayload: any) => {
-    console.log("Parent: Updating annotation with ID:", id, "Action Type:", actionType, "Payload:", updatePayload);
-
-    // if action is update then keep the annotation view open, run annotations update (it will update only one annotation), reload annotations but with previous date range
-
-  }
 
   const parseTimeInterval = (interval: string): number => {
     const value = parseInt(interval.match(/\d+/)?.[0] || '15', 10);

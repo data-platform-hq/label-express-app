@@ -2,16 +2,21 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Annotation } from '@/app/types/types';
-import { fetchAnnotationRecords, removeAnnotationRecord, updateAnnotationRecord } from '@/app/utils/actions';
+import { fetchAnnotationRecords, updateAnnotationRecord } from '@/app/utils/actions';
 import { useFormState } from '@/app/contexts/FormStateContext';
 import * as d3 from 'd3';
+
+interface UpdateResult {
+  success: boolean;
+  updatedAnnotation?: Annotation | null; // Include the updated annotation data
+  deletedId?: string | null;
+}
 
 interface UseAnnotationsResult {
   annotations: Annotation[];
   isLoadingAnnotations: boolean;
   loadAnnotations: () => Promise<void>;
-  deleteAnnotation: (documentId: string) => Promise<void>;
-  updateAnnotation: (documentId: string, actionType: string, update: any) => Promise<void>;
+  updateAnnotation: (documentId: string, actionType: 'update' | 'delete', updatePayload: any) => Promise<UpdateResult>;
 }
 
 // Helper function to get or generate color for an annotation type
@@ -70,39 +75,22 @@ function getColorForAnnotationType(annotationType: string): string {
 export function useAnnotations(): UseAnnotationsResult {
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [isLoadingAnnotations, setIsLoadingAnnotations] = useState(false);
-  
-  // load form state
   const { selectedIndex, startDate, endDate, filterField, filterValue } = useFormState();
-  
-  // Track previous values to detect actual changes
-  const prevStateRef = useRef({
-    startDate: '',
-    endDate: '',
-    filterField: '',
-    filterValue: '',
-    selectedIndex: ''
-  });
-  
-  // Track if we're currently loading annotations to prevent duplicate requests
+  const prevStateRef = useRef({ /* ... */ });
   const isLoadingRef = useRef(false);
-  
-  // Memoize loadAnnotations to maintain stable reference
+
   const loadAnnotations = useCallback(async () => {
-    // Skip if we're already loading or if dates are missing
     if (isLoadingRef.current || !startDate || !endDate) {
       return;
     }
-
     isLoadingRef.current = true;
     setIsLoadingAnnotations(true);
-    
+    console.log("useAnnotations: Loading annotations for range:", startDate, "to", endDate);
     try {
-      // Convert Date objects to ISO strings
       const startDateStr = startDate;
       const endDateStr = endDate;
-      
       const fetchedAnnotations = await fetchAnnotationRecords(startDateStr, endDateStr, filterField, filterValue);
-      
+
       const processedAnnotations = fetchedAnnotations.map(a => ({
         id: a._id,
         sourceIndex: a.sourceIndex,
@@ -115,77 +103,100 @@ export function useAnnotations(): UseAnnotationsResult {
         annotationType: a.annotationType,
         indicator: a.indicator,
         recommendation: a.recommendation,
-        color: getColorForAnnotationType(a.annotationType || 'default'), 
+        color: getColorForAnnotationType(a.annotationType || 'default'),
         createdBy: a.createdBy,
         createdAt: a.createdAt,
         status: a.status,
       }));
-      
-      setAnnotations(processedAnnotations);
+
+      console.log("useAnnotations: Fetched and processed annotations:", processedAnnotations.length);
+      setAnnotations(processedAnnotations); // Update state
     } catch (error) {
       console.error('Error loading annotations:', error);
+      setAnnotations([]); // Clear on error maybe?
     } finally {
       setIsLoadingAnnotations(false);
       isLoadingRef.current = false;
     }
   }, [startDate, endDate, filterField, filterValue]);
-  
-  // Effect to load annotations when relevant form state changes
+
   useEffect(() => {
-    // Skip if we don't have valid dates
     if (!startDate || !endDate) {
       return;
     }
-    
-    // Check if any relevant values actually changed
     const prevState = prevStateRef.current;
     const startDateChanged = !prevState.startDate || prevState.startDate !== startDate;
     const endDateChanged = !prevState.endDate || prevState.endDate !== endDate;
     const filterFieldChanged = prevState.filterField !== filterField;
     const filterValueChanged = prevState.filterValue !== filterValue;
     const indexChanged = prevState.selectedIndex !== selectedIndex;
-    
-    // Update previous state
-    prevStateRef.current = {
-      startDate,
-      endDate,
-      filterField,
-      filterValue,
-      selectedIndex
-    };
-    
-    // Only load if something relevant changed
-    if (startDateChanged || endDateChanged || filterFieldChanged || filterValueChanged || indexChanged) {
-      loadAnnotations();
+
+    prevStateRef.current = { startDate, endDate, filterField, filterValue, selectedIndex };
+
+    // Only load if range or filters change significantly
+    // Or if it's the initial load (prevState is empty)
+    if (startDateChanged || endDateChanged || filterFieldChanged || filterValueChanged || indexChanged || annotations.length === 0 ) {
+         console.log("useAnnotations: Triggering loadAnnotations due to state change.");
+         loadAnnotations();
     }
-  }, [startDate, endDate, filterField, filterValue, selectedIndex, loadAnnotations]);
-  
-  const deleteAnnotation = async (id: string) => {
+  }, [startDate, endDate, filterField, filterValue, selectedIndex, loadAnnotations, annotations.length]); // Add annotations.length dependency
+
+
+  // Modified updateAnnotation function
+  const updateAnnotation = async (
+        id: string,
+        actionType: 'update' | 'delete',
+        updatePayload: any
+    ): Promise<UpdateResult> => {
     try {
-      await removeAnnotationRecord(id);
-      // After deleting, reload annotations
-      loadAnnotations();
+      // Call the backend
+      // Assuming updateAnnotationRecord handles both update and soft delete logic
+      const backendResult = await updateAnnotationRecord(id, actionType, updatePayload);
+
+      // If backend indicates success (modify based on actual return value)
+      if (backendResult) { // Assume backendResult is truthy on success
+          if (actionType === 'update') {
+              // Create the updated annotation object based on the payload
+              // Important: Ensure the payload contains all necessary fields or merge with existing
+              const updatedAnnotationData: Annotation = {
+                  ...annotations.find(a => a.id === id), // Find existing data
+                  ...updatePayload, // Apply updates from payload
+                  id: id, // Ensure ID is present
+                  color: getColorForAnnotationType(updatePayload.annotationType || annotations.find(a => a.id === id)?.annotationType || 'default'), // Recalculate color if type changed
+              };
+
+              // Update local state IMMEDIATELY
+              setAnnotations(prevAnnotations =>
+                  prevAnnotations.map(ann =>
+                      ann.id === id ? updatedAnnotationData : ann
+                  )
+              );
+              console.log("useAnnotations: Updated annotation locally:", id);
+              return { success: true, updatedAnnotation: updatedAnnotationData };
+
+          } else if (actionType === 'delete') {
+              // Update local state IMMEDIATELY (remove the annotation)
+              setAnnotations(prevAnnotations =>
+                  prevAnnotations.filter(ann => ann.id !== id)
+              );
+               console.log("useAnnotations: Deleted annotation locally:", id);
+              return { success: true, deletedId: id };
+          }
+      }
+      // If backend failed or returned falsy
+       console.error('Backend annotation update/delete failed for:', id, actionType);
+      return { success: false };
+
     } catch (error) {
-      console.error('Failed to delete annotation:', error);
+      console.error(`Failed to ${actionType} annotation:`, error);
+      return { success: false };
     }
   };
-
-  const updateAnnotation = async (id: string, actionType: string, update: any) => {
-    try {
-      await updateAnnotationRecord(id, actionType, update);
-      // After deleting, reload annotations
-      loadAnnotations();
-    } catch (error) {
-      console.error('Failed to delete annotation:', error);
-    }
-  };
-
 
   return {
     annotations,
     isLoadingAnnotations,
     loadAnnotations,
-    deleteAnnotation,
-    updateAnnotation
+    updateAnnotation,
   };
 }
