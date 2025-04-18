@@ -219,7 +219,7 @@ export async function searchAnnotationRecords(startDate: string, endDate: string
     };
     
     const searchBody: any = {
-      size: 1000,
+      size: 10000,
       query: filterQuery
     };
 
