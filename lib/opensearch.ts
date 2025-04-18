@@ -229,7 +229,16 @@ export async function searchAnnotations(startDate: string, endDate: string, filt
     });
 
     // for each hit, return the _source object and add _id as _id field
-    return response.body.hits.hits.map((hit: any) => ({ ...hit._source, _id: hit._id })); 
+    const annotations = response.body.hits.hits.map((hit: any) => ({ ...hit._source, _id: hit._id }));
+
+    //sort by startDate
+    annotations.sort((a: any, b: any) => {
+      const dateA = new Date(a.startDate);
+      const dateB = new Date(b.startDate);
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    return annotations;
 
   } catch (error) {
     console.error('Error fetching annotations:', error);
