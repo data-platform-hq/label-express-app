@@ -1,6 +1,6 @@
 //app/components/Views/AnnotationView.tsx
 
-import { Annotation, AnnotationStatus } from '@/app/types/types';
+import { Annotation, AnnotationStatus, AnnotationHistory } from '@/app/types/types';
 import { useState, useEffect } from 'react'; // Added useEffect
 import { useSession} from "next-auth/react"
 
@@ -52,8 +52,26 @@ export default function AnnotationView({
     // --- Async Handlers (handleDeleteConfirm, handleEditSave, handleStatusChange) remain the same ---
     const handleDeleteConfirm = async () => {
         if (deleteModal.annotationId && onUpdateAnnotation && !isSubmitting) {
+
+            // only deleted flag is changed
+            const changes = {
+                field: 'deleted',
+                oldValue: selectedAnnotation?.deleted ?? null,
+                newValue: true
+            };
+            const historyEntry = generateHistoryEntry(
+                'delete',
+                { email: session?.user?.email ?? '', userId: session?.user?.id ?? '' },
+                [changes]
+            );
+            const updatedAnnotation = {
+                ...selectedAnnotation,
+                deleted: true,
+                history: [...((selectedAnnotation?.history || []) as AnnotationHistory[]), historyEntry] // Append new history entry
+            };
+
             setIsSubmitting(true);
-            const success = await onUpdateAnnotation(deleteModal.annotationId, 'delete', {});
+            const success = await onUpdateAnnotation(deleteModal.annotationId, 'delete', updatedAnnotation);
             setIsSubmitting(false);
             if (success) {
                 setDeleteModal({ isOpen: false, annotationId: null });
@@ -66,14 +84,43 @@ export default function AnnotationView({
 
     const handleEditSave = async (editedAnnotation: Annotation | null) => { // Allow null check
         if (editedAnnotation?.id && onUpdateAnnotation && !isSubmitting) {
-            setIsSubmitting(true);
+
+             // Step 1: Identify fields that were changed
+            const changes = Object.keys(editedAnnotation).map(field => {
+                if (selectedAnnotation && selectedAnnotation[field as keyof Annotation] !== editedAnnotation[field as keyof Annotation]) {
+                    return {
+                        field, 
+                        oldValue: selectedAnnotation[field as keyof Annotation], 
+                        newValue: editedAnnotation[field as keyof Annotation]
+                    };
+                }
+                return null;
+            }).filter(change => change !== null) as Array<{ field: string; oldValue: any; newValue: any }>;
+
+            // Step 2: Append the new history entry
+            const historyEntry = generateHistoryEntry(
+                'edit',
+                { email: session?.user?.email ?? '', userId: session?.user?.id ?? '' },
+                changes
+            );
+            
             const updatePayload = { // Send only changed fields
                 annotationType: editedAnnotation.annotationType,
                 description: editedAnnotation.description,
                 status: editedAnnotation.status,
                 // include other editable fields if any
             };
-            const success = await onUpdateAnnotation(editedAnnotation.id, 'update', updatePayload);
+
+            // Step 3: Add history entry to the payload
+
+            const updatedAnnotation = {
+                ...editedAnnotation,
+                history: [...(editedAnnotation.history || []), historyEntry] // Append new history entry
+            };
+
+            
+            setIsSubmitting(true);
+            const success = await onUpdateAnnotation(editedAnnotation.id, 'update', updatedAnnotation);
             setIsSubmitting(false);
             if (success) {
                 setEditModal({ isOpen: false, annotation: null });
@@ -86,9 +133,27 @@ export default function AnnotationView({
 
      const handleStatusChange = async (newStatus: AnnotationStatus) => {
         if (selectedAnnotation?.id && onUpdateAnnotation && !isSubmitting) {
-            setIsSubmitting(true);
+
+            // it is only a status change field 
+            const changes = {
+                field: 'status',
+                oldValue: selectedAnnotation.status,
+                newValue: newStatus
+            };
+            const historyEntry = generateHistoryEntry(
+                'edit',
+                { email: session?.user?.email ?? '', userId: session?.user?.id ?? '' },
+                [changes]
+            );
+            const updatedAnnotation = {
+                ...selectedAnnotation,
+                status: newStatus,
+                history: [...(selectedAnnotation.history || []), historyEntry] // Append new history entry
+            };
+            
             const updatePayload = { status: newStatus }; // Only send the status change
-            await onUpdateAnnotation(selectedAnnotation.id, 'update', updatePayload);
+            setIsSubmitting(true);
+            await onUpdateAnnotation(selectedAnnotation.id, 'update', updatedAnnotation);
             setIsSubmitting(false);
             // Parent handles UI update via prop change
         }
@@ -243,6 +308,23 @@ export default function AnnotationView({
     // Button styling (example)
     const actionButtonBase = `inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2`;
     const disabledButtonClass = `opacity-50 cursor-not-allowed`;
+
+    // Function to generate history entry
+    const generateHistoryEntry = (
+        actionType: 'edit' | 'delete' | 'approve', 
+        changedBy: { email: string; userId: string }, 
+        changes: { field: string; oldValue: any; newValue: any }[]
+      ): AnnotationHistory => {
+        return {
+          changedAt: new Date().toISOString(), // Set the current timestamp for the change
+          changedBy,
+          changes: changes.map(change => ({
+            field: change.field,
+            oldValue: change.oldValue,
+            newValue: change.newValue,
+          }))
+        };
+      };
 
     return (
         // Added a container with padding and border

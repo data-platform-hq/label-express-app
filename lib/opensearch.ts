@@ -277,10 +277,12 @@ export async function updateAnnotation(annotationId: string, actionType: string,
   const annotationIndex = process.env.ANNOTATION_INDEX || 'default_annotation_index';
   
   try {
+
+    const doc = payload;
     // Determine the document update based on action type
-    const doc = actionType === 'delete' 
-      ? { deleted: true } 
-      : payload;
+    // const doc = actionType === 'delete' 
+    //   ? { deleted: true } 
+    //   : payload;
       
     // Validate action type
     if (actionType !== 'delete' && actionType !== 'update') {
@@ -288,7 +290,7 @@ export async function updateAnnotation(annotationId: string, actionType: string,
     }
     
     // If update action but no payload provided
-    if (actionType === 'update' && !payload) {
+    if (!payload) {
       throw new Error('Payload is required for update action');
     }
     
@@ -296,7 +298,7 @@ export async function updateAnnotation(annotationId: string, actionType: string,
     const response = await client.update({
       index: annotationIndex,
       id: annotationId,
-      body: { doc }
+      body: { doc },
     });
     
     // Refresh index asynchronously
