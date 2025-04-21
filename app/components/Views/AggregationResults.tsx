@@ -51,6 +51,15 @@ export default function AggregationResults({
     }
   }, [fetchedAnnotations]);
 
+  // if sidebar is closed, reset the selected annotation
+  useEffect(() => {
+    if (!showAnnotationSidebar) {
+      setSelectedAnnotation(null);
+      setShowAnnotationView(false);
+    }
+  }, [showAnnotationSidebar]);
+
+
   const {
     brushMode,
     setBrushMode,
@@ -131,6 +140,7 @@ export default function AggregationResults({
   // --- Other Handlers ---
   const handleZoomHistory = useCallback(() => {
     isSidebarNavigationTriggerRef.current = false;
+
     onZoomHistory();
   }, [onZoomHistory]);
 

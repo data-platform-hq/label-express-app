@@ -21,7 +21,8 @@ export function useAggregationData() {
     filterField, 
     filterValue,
     setStartDate,
-    setEndDate
+    setEndDate,
+    setInterval,
   } = useFormState();
 
   // Consolidated function to resolve interval value
@@ -98,6 +99,9 @@ export function useAggregationData() {
         // Update the dates using context setters
         setStartDate(minDate);
         setEndDate(maxDate);
+
+        // Set the interval to auto
+        setInterval("auto");
 
         // Use the consolidated function to resolve interval
         const effectiveInterval = resolveInterval(interval, minDate, maxDate);
