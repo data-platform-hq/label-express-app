@@ -59,6 +59,8 @@ npx prisma migrate dev
 or
 npx prisma db push
 
+yarn seed
+
 ``` to refresh prisma
 
 
