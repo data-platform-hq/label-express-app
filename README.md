@@ -52,6 +52,15 @@ name: 'Admin User',
 email: 'admin@example.com',
 password: 'admin123',
 
+``` 
+
+npx prisma generate 
+npx prisma migrate dev
+or
+npx prisma db push
+
+``` to refresh prisma
+
 
 app
  ┣ admin
