@@ -2,6 +2,7 @@
 
 import { Annotation, AnnotationStatus } from '@/app/types/types';
 import { useState, useEffect } from 'react'; // Added useEffect
+import { useSession} from "next-auth/react"
 
 interface AnnotationViewProps {
     onUpdateAnnotation?: (id: string, actionType: 'update' | 'delete', update: any) => Promise<boolean>;
@@ -12,6 +13,12 @@ export default function AnnotationView({
     onUpdateAnnotation,
     selectedAnnotation,
 }: AnnotationViewProps) {
+
+    const { data: session } = useSession()
+    const userRole = session?.user?.role;
+    const userId = session?.user?.id;
+
+
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, annotationId: null as string | null });
     const [editModal, setEditModal] = useState<{ isOpen: boolean; annotation: Annotation | null }>({ isOpen: false, annotation: null }); // Explicit type
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -255,51 +262,78 @@ export default function AnnotationView({
                     {/* Add other details concisely */}
                      <div><span className="font-medium text-gray-900">Range:</span> {formatDate(selectedAnnotation.startDate)} - {formatDate(selectedAnnotation.endDate)}</div>
                      {selectedAnnotation.createdBy && (
-                         <div><span className="font-medium text-gray-900">By:</span> {selectedAnnotation.createdBy}</div>
+                         <div><span className="font-medium text-gray-900">By:</span> {selectedAnnotation.createdBy.email}</div>
                      )}
                 </div>
 
                 {/* Right side: Actions */}
                 <div className="flex-shrink-0 flex items-center space-x-2">
-                    {/* Approve Button */}
-                    <button
-                        onClick={() => handleStatusChange('approved')}
-                        disabled={isSubmitting || selectedAnnotation.status === 'approved'}
-                        className={`${actionButtonBase} text-white ${selectedAnnotation.status === 'approved' ? 'bg-green-300 ' + disabledButtonClass : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'} ${isSubmitting ? disabledButtonClass : ''}`}
-                        title="Approve Annotation"
-                    >
-                        {/* Icon (optional) */} Approve
-                    </button>
+                    {/* Conditionally render buttons based on userRole and userId */}
+                    {userRole === 'admin' || userRole === 'approver' ? (
+                        <>
+                            {/* Approve Button */}
+                            <button
+                                onClick={() => handleStatusChange('approved')}
+                                disabled={isSubmitting || selectedAnnotation.status === 'approved'}
+                                className={`${actionButtonBase} text-white ${selectedAnnotation.status === 'approved' ? 'bg-green-300 ' + disabledButtonClass : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'} ${isSubmitting ? disabledButtonClass : ''}`}
+                                title="Approve Annotation"
+                            >
+                                Approve
+                            </button>
 
-                    {/* Reject Button */}
-                    <button
-                        onClick={() => handleStatusChange('rejected')}
-                        disabled={isSubmitting || selectedAnnotation.status === 'rejected'}
-                         className={`${actionButtonBase} text-white ${selectedAnnotation.status === 'rejected' ? 'bg-yellow-300 ' + disabledButtonClass : 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-400'} ${isSubmitting ? disabledButtonClass : ''}`}
-                        title="Reject Annotation"
-                    >
-                        {/* Icon (optional) */} Reject
-                    </button>
+                            {/* Reject Button */}
+                            <button
+                                onClick={() => handleStatusChange('rejected')}
+                                disabled={isSubmitting || selectedAnnotation.status === 'rejected'}
+                                className={`${actionButtonBase} text-white ${selectedAnnotation.status === 'rejected' ? 'bg-yellow-300 ' + disabledButtonClass : 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-400'} ${isSubmitting ? disabledButtonClass : ''}`}
+                                title="Reject Annotation"
+                            >
+                                Reject
+                            </button>
 
-                    {/* Edit Button */}
-                    <button
-                        onClick={() => setEditModal({ isOpen: true, annotation: selectedAnnotation })}
-                        disabled={isSubmitting}
-                        className={`${actionButtonBase} text-gray-700 bg-white border-gray-300 hover:bg-gray-50 focus:ring-blue-500 ${isSubmitting ? disabledButtonClass : ''}`}
-                        title="Edit Annotation"
-                    >
-                        {/* Icon (optional) */} Edit
-                    </button>
+                            {/* Edit Button */}
+                            <button
+                                onClick={() => setEditModal({ isOpen: true, annotation: selectedAnnotation })}
+                                disabled={isSubmitting}
+                                className={`${actionButtonBase} text-gray-700 bg-white border-gray-300 hover:bg-gray-50 focus:ring-blue-500 ${isSubmitting ? disabledButtonClass : ''}`}
+                                title="Edit Annotation"
+                            >
+                                Edit
+                            </button>
 
-                    {/* Delete Button */}
-                    <button
-                        onClick={() => setDeleteModal({ isOpen: true, annotationId: selectedAnnotation.id! })}
-                        disabled={isSubmitting}
-                         className={`${actionButtonBase} text-white bg-red-600 hover:bg-red-700 focus:ring-red-500 ${isSubmitting ? disabledButtonClass : ''}`}
-                        title="Delete Annotation"
-                    >
-                        {/* Icon (optional) */} Delete
-                    </button>
+                            {/* Delete Button */}
+                            <button
+                                onClick={() => setDeleteModal({ isOpen: true, annotationId: selectedAnnotation.id! })}
+                                disabled={isSubmitting}
+                                className={`${actionButtonBase} text-white bg-red-600 hover:bg-red-700 focus:ring-red-500 ${isSubmitting ? disabledButtonClass : ''}`}
+                                title="Delete Annotation"
+                            >
+                                Delete
+                            </button>
+                        </>
+                    ) : selectedAnnotation.createdBy?.userId === userId ? (
+                        <>
+                            {/* Edit Button (User can edit if they created the annotation) */}
+                            <button
+                                onClick={() => setEditModal({ isOpen: true, annotation: selectedAnnotation })}
+                                disabled={isSubmitting}
+                                className={`${actionButtonBase} text-gray-700 bg-white border-gray-300 hover:bg-gray-50 focus:ring-blue-500 ${isSubmitting ? disabledButtonClass : ''}`}
+                                title="Edit Annotation"
+                            >
+                                Edit
+                            </button>
+
+                            {/* Delete Button (User can delete if they created the annotation) */}
+                            <button
+                                onClick={() => setDeleteModal({ isOpen: true, annotationId: selectedAnnotation.id! })}
+                                disabled={isSubmitting}
+                                className={`${actionButtonBase} text-white bg-red-600 hover:bg-red-700 focus:ring-red-500 ${isSubmitting ? disabledButtonClass : ''}`}
+                                title="Delete Annotation"
+                            >
+                                Delete
+                            </button>
+                        </>
+                    ) : null /* If the user is neither admin, approver, nor the creator, show nothing */}
                 </div>
             </div>
             {/* Modals are rendered conditionally outside the main flow */}

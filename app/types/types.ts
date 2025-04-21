@@ -39,6 +39,19 @@ export interface TermData {
 
   export type AnnotationStatus = 'created' | 'approved' | 'rejected' | 'deleted';
 
+  export interface AnnotationHistory {
+    changedAt: string; // Date/time of the change in ISO format or desired string format
+    changedBy: {
+      email: string;
+      userId: string;
+    }; // Information about the user who made the change
+    changes: Array<{
+      field: string; // Name of the field that was changed
+      oldValue: any; // Previous value of the field
+      newValue: any; // New value of the field
+    }>; // List of field changes for this particular modification
+  }
+
   export interface Annotation {
     id?: string;
     sourceIndex: string;
@@ -53,7 +66,11 @@ export interface TermData {
     recommendation: string;
     color?: string;
     createdAt: string;
-    createdBy: string;
+    createdBy: {
+      email: string;
+      userId: string;
+    };
     status: AnnotationStatus; 
+    history?: AnnotationHistory[];
   }
 

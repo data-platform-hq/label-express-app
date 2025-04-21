@@ -46,7 +46,11 @@ export default function AnnotationPopup({
         indicator: formData.indicator,
         recommendation: formData.recommendation,
         createdAt: new Date().toISOString(),
-        createdBy: session?.user?.email || '',
+        createdBy: {
+          email: session?.user?.email || '',
+          userId: session?.user?.id || ''
+        },
+        
         status: 'created'
       };
 
