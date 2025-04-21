@@ -1,4 +1,9 @@
+// app/admin/layout.tsx
+
 import { requireAdmin } from "@/lib/auth";
+
+// Add this line: Opt-out of static generation for this layout
+export const dynamic = 'force-dynamic';
 
 export default async function AdminLayout({
   children,

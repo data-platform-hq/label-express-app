@@ -3,8 +3,7 @@ import { getIndices } from '@/lib/opensearch';
 import FieldSelector from '@/app/components/FieldsSelector/FieldSelector';
 import { FormStateProvider } from '@/app/contexts/FormStateContext';
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { redirect } from "next/navigation";
+import { authOptions } from "@/lib/auth";
 
 export default async function Page() {
 

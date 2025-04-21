@@ -68,3 +68,24 @@ npx prisma db push
 yarn seed
 
 ```
+
+
+## Build & Deploy
+
+```
+#Build Your Application
+yarn build
+
+#Start the Production Server
+yarn start
+
+```
+
+### Docker
+
+```
+#Docker
+docker build -t label-express-app .
+docker run -p 3000:3000 -v $(pwd)/data:/app/data label-express-app
+
+```

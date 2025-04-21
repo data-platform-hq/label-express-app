@@ -52,8 +52,8 @@ export default function ChartBrush({
         
         // Convert pixel positions to dates
         const [x0, x1] = event.selection;
-        const startDate = x.invert(x0);
-        const endDate = x.invert(x1);
+        const startDate = x.invert(x0).toISOString();
+        const endDate = x.invert(x1).toISOString();
     
         onBrushEnd({
           startDate,

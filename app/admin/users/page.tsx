@@ -1,3 +1,4 @@
+// app/admin/users/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,6 +10,8 @@ interface User {
   email: string | null;
   role: string;
 }
+
+export const dynamic = 'force-dynamic';
 
 export default function UsersPage() {
   const router = useRouter();

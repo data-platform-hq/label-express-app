@@ -1,3 +1,5 @@
+//app/auth/signin/page.tsx
+
 'use client'
 
 import { useState, useEffect } from "react"
@@ -8,6 +10,7 @@ import Link from "next/link"
 export default function SignIn() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -19,6 +22,14 @@ export default function SignIn() {
     if (searchParams.get("registered") === "true") {
       setSuccess("Account created successfully! Please sign in.")
     }
+
+    // Clear error if callbackUrl changes (e.g., user navigates back)
+    const errorParam = searchParams.get("error");
+    if (errorParam) {
+         // You can customize messages based on errorParam if needed
+         setError("Invalid email or password");
+    }
+
   }, [searchParams])
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,9 +39,9 @@ export default function SignIn() {
     
     try {
       const result = await signIn("credentials", {
-        redirect: false,
         email,
         password,
+        callbackUrl: callbackUrl,
       })
       
       if (result?.error) {

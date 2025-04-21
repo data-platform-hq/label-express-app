@@ -111,8 +111,6 @@ export async function removeAnnotationRecord(annotationId: string) {
 
 export async function updateAnnotationRecord(annotationId: string, actionType: string, update: any) {
 
-  console.log('Updating annotation:', annotationId, actionType, update);
-
   try 
   {
     return await updateAnnotation(annotationId, actionType, update);

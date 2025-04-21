@@ -123,7 +123,6 @@ const AnnotationSidebar: React.FC<AnnotationSidebarProps> = ({
     selectedPageRef.current = currentPage;
     
     triggerParentReload(annotation);
-    console.log(`Page: ${currentPage}, Index: ${globalIndex}`);
     if (onAnnotationSelect) {
       onAnnotationSelect(annotation);
     }
