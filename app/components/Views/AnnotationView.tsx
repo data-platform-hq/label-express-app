@@ -326,29 +326,54 @@ export default function AnnotationView({
         };
       };
 
-    return (
+      return (
         // Added a container with padding and border
         <div className="p-3 border-t border-gray-200 bg-gray-50">
-            <div className="flex flex-wrap justify-between items-center gap-y-2"> {/* Allow wrapping and gap */}
-                {/* Left side: Details */}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-700 flex-grow mr-4"> {/* Allow wrapping */}
-                    <div>
-                        <span className="font-medium text-gray-900">Status:</span>
-                        <span className={`ml-1.5 px-2 py-0.5 rounded-full ${getStatusColor(selectedAnnotation.status)}`}>
-                            {selectedAnnotation.status}
-                        </span>
+            <div className="flex flex-wrap justify-between items-center gap-y-2"> {/* Outer container */}
+                
+                {/* Details Section */}
+                <div className="flex flex-col text-xs text-gray-700 flex-grow mr-4">
+                    {/* First Row: Status, Type, Indicator */}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                        {/* Status */}
+                        <div>
+                            <span className="font-medium text-gray-900"><b>Status:</b></span>
+                            <span className={`ml-1.5 px-2 py-0.5 rounded-full ${getStatusColor(selectedAnnotation.status)}`}>
+                                {selectedAnnotation.status}
+                            </span>
+                        </div>
+                        {/* Type */}
+                        {selectedAnnotation.annotationType && (
+                            <div>
+                                <span className="font-medium text-gray-900"><b>Type:</b></span> {selectedAnnotation.annotationType}
+                            </div>
+                        )}
+                        {/* Indicator */}
+                        {selectedAnnotation.indicator && (
+                            <div>
+                                <span className="font-medium text-gray-900"><b>Indicator:</b></span> {selectedAnnotation.indicator}
+                            </div>
+                        )}
                     </div>
-                    {selectedAnnotation.annotationType && (
-                        <div><span className="font-medium text-gray-900">Type:</span> {selectedAnnotation.annotationType}</div>
-                    )}
-                    {/* Add other details concisely */}
-                     <div><span className="font-medium text-gray-900">Range:</span> {formatDate(selectedAnnotation.startDate)} - {formatDate(selectedAnnotation.endDate)}</div>
-                     {selectedAnnotation.createdBy && (
-                         <div><span className="font-medium text-gray-900">By:</span> {selectedAnnotation.createdBy.email}</div>
-                     )}
+    
+                    {/* Second Row: Range, By */}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
+                        {/* Range */}
+                        <div>
+                            <span className="font-medium text-gray-900"><b>Range:</b></span> 
+                            {formatDate(selectedAnnotation.startDate)} - {formatDate(selectedAnnotation.endDate)}
+                        </div>
+                        {/* Created By */}
+                        {selectedAnnotation.createdBy && (
+                            <div>
+                                <span className="font-medium text-gray-900"><b>By:</b></span> 
+                                {selectedAnnotation.createdBy.email}
+                            </div>
+                        )}
+                    </div>
                 </div>
-
-                {/* Right side: Actions */}
+                
+                {/* Actions Section */}
                 <div className="flex-shrink-0 flex items-center space-x-2">
                     {/* Conditionally render buttons based on userRole and userId */}
                     {userRole === 'admin' || userRole === 'approver' ? (
@@ -362,7 +387,7 @@ export default function AnnotationView({
                             >
                                 Approve
                             </button>
-
+    
                             {/* Reject Button */}
                             <button
                                 onClick={() => handleStatusChange('rejected')}
@@ -372,7 +397,7 @@ export default function AnnotationView({
                             >
                                 Reject
                             </button>
-
+    
                             {/* Edit Button */}
                             <button
                                 onClick={() => setEditModal({ isOpen: true, annotation: selectedAnnotation })}
@@ -382,7 +407,7 @@ export default function AnnotationView({
                             >
                                 Edit
                             </button>
-
+    
                             {/* Delete Button */}
                             <button
                                 onClick={() => setDeleteModal({ isOpen: true, annotationId: selectedAnnotation.id! })}
@@ -404,7 +429,7 @@ export default function AnnotationView({
                             >
                                 Edit
                             </button>
-
+    
                             {/* Delete Button (User can delete if they created the annotation) */}
                             <button
                                 onClick={() => setDeleteModal({ isOpen: true, annotationId: selectedAnnotation.id! })}
@@ -418,6 +443,7 @@ export default function AnnotationView({
                     ) : null /* If the user is neither admin, approver, nor the creator, show nothing */}
                 </div>
             </div>
+    
             {/* Modals are rendered conditionally outside the main flow */}
             <DeleteConfirmationModal />
             <EditAnnotationModal />
