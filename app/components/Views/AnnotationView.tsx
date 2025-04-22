@@ -3,6 +3,7 @@
 import { Annotation, AnnotationStatus, AnnotationHistory } from '@/app/types/types';
 import { useState, useEffect } from 'react'; // Added useEffect
 import { useSession} from "next-auth/react"
+import { annotationTypeOptions, indicatorOptions, recommendationOptions, getOptionLabel, OptionType } from '@/app/components/Annotations/annotationOptions';
 
 interface AnnotationViewProps {
     onUpdateAnnotation?: (id: string, actionType: 'update' | 'delete', update: any) => Promise<boolean>;
@@ -104,12 +105,6 @@ export default function AnnotationView({
                 changes
             );
             
-            const updatePayload = { // Send only changed fields
-                annotationType: editedAnnotation.annotationType,
-                description: editedAnnotation.description,
-                status: editedAnnotation.status,
-                // include other editable fields if any
-            };
 
             // Step 3: Add history entry to the payload
 
@@ -166,7 +161,7 @@ export default function AnnotationView({
         const disabledClass = "opacity-50 cursor-not-allowed";
 
         return (
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="fixed inset-0 backdrop-blur-xs z-50 flex items-center justify-center p-4 backdrop-blur-sm">
                 <div
                     className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 transform transition-all"
                     onClick={(e) => e.stopPropagation()} // Prevent closing modal on inner click
@@ -204,94 +199,141 @@ export default function AnnotationView({
         );
     };
 
+
+
     const EditAnnotationModal = () => {
         if (!editModal.isOpen || !editModal.annotation) return null;
-
+    
         // Local state for the form within the modal
         const [editedAnnotation, setEditedAnnotation] = useState<Annotation>(() => ({
             ...editModal.annotation! // Initialize with the annotation passed to the modal
         }));
-
+    
         // Update local state if the underlying annotation prop changes while modal is open
-        // This is less common but can happen in complex scenarios
         useEffect(() => {
-           if (editModal.annotation) {
-               setEditedAnnotation({...editModal.annotation});
-           }
+            if (editModal.annotation) {
+                setEditedAnnotation({ ...editModal.annotation });
+            }
         }, [editModal.annotation]);
-
+    
         const baseButtonClass = "px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2";
         const disabledClass = "opacity-50 cursor-not-allowed";
-
+    
         return (
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="fixed inset-0 backdrop-blur-xs z-50 flex items-center justify-center p-4 backdrop-blur-sm">
                 <div
-                    className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 transform transition-all overflow-y-auto max-h-[90vh]" // Allow scrolling if content overflows
+                    className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 transform transition-all overflow-y-auto max-h-[90vh]" // Allow scrolling if needed
                     onClick={(e) => e.stopPropagation()}
                 >
-                     <div className="flex items-center mb-4">
+                    {/* Modal Header */}
+                    <div className="flex items-center mb-4">
                         <div className="bg-blue-100 rounded-full p-2 mr-3 flex-shrink-0">
-                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a 2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                         </div>
                         <h3 className="text-lg font-medium text-gray-900">Edit Annotation</h3>
                     </div>
-
+    
                     {/* Form Fields */}
-                     <div className="space-y-4">
+                    <div className="space-y-4">
+                        {/* Annotation Type */}
                         <div className="mb-4">
                             <label htmlFor="edit-annotation-type" className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                            <input
+                            <select
                                 id="edit-annotation-type"
-                                type="text"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                value={editedAnnotation.annotationType || ''}
-                                onChange={(e) => setEditedAnnotation(prev => ({ ...prev!, annotationType: e.target.value }))}
-                            />
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                value={editedAnnotation.annotationType || ""}
+                                onChange={(e) => setEditedAnnotation((prev) => ({ ...prev!, annotationType: e.target.value }))}
+                            >
+                                <option value="" disabled>Choose Type</option>
+                                {annotationTypeOptions.map((option: OptionType) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
+    
+                        {/* Description Field */}
                         <div className="mb-4">
                             <label htmlFor="edit-description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                             <textarea
                                 id="edit-description"
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                value={editedAnnotation.description || ''}
+                                value={editedAnnotation.description || ""}
                                 rows={3}
-                                onChange={(e) => setEditedAnnotation(prev => ({ ...prev!, description: e.target.value }))}
+                                onChange={(e) => setEditedAnnotation((prev) => ({ ...prev!, description: e.target.value }))}
                             />
                         </div>
-                         <div className="mb-4">
+    
+                        {/* Status Dropdown */}
+                        <div className="mb-4">
                             <label htmlFor="edit-status" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                             <select
                                 id="edit-status"
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
                                 value={editedAnnotation.status}
-                                onChange={(e) => setEditedAnnotation(prev => ({ ...prev!, status: e.target.value as AnnotationStatus }))}
+                                onChange={(e) => setEditedAnnotation((prev) => ({ ...prev!, status: e.target.value as AnnotationStatus }))}
                             >
                                 <option value="created">Created</option>
                                 <option value="approved">Approved</option>
                                 <option value="rejected">Rejected</option>
                             </select>
                         </div>
-                         {/* Add other editable fields here if needed */}
+    
+                        {/* Indicator Dropdown */}
+                        <div className="mb-4">
+                            <label htmlFor="edit-indicator" className="block text-sm font-medium text-gray-700 mb-1">Indicator</label>
+                            <select
+                                id="edit-indicator"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                value={editedAnnotation.indicator || ""}
+                                onChange={(e) => setEditedAnnotation((prev) => ({ ...prev!, indicator: e.target.value }))}
+                            >
+                                <option value="" disabled>Select an Indicator</option>
+                                {indicatorOptions.map((option: OptionType) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+    
+                        {/* Recommendation Dropdown */}
+                        <div className="mb-4">
+                            <label htmlFor="edit-recommendation" className="block text-sm font-medium text-gray-700 mb-1">Recommendation</label>
+                            <select
+                                id="edit-recommendation"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                value={editedAnnotation.recommendation || ""}
+                                onChange={(e) => setEditedAnnotation((prev) => ({ ...prev!, recommendation: e.target.value }))}
+                            >
+                                <option value="" disabled>Choose Recommendation</option>
+                                {recommendationOptions.map((option: OptionType) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
-
+    
                     {/* Actions */}
                     <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
                         <button
                             onClick={() => !isSubmitting && setEditModal({ isOpen: false, annotation: null })}
                             disabled={isSubmitting}
-                            className={`${baseButtonClass} bg-gray-100 hover:bg-gray-200 text-gray-800 focus:ring-gray-300 ${isSubmitting ? disabledClass : ''}`}
+                            className={`${baseButtonClass} bg-gray-100 hover:bg-gray-200 text-gray-800 focus:ring-gray-300 ${isSubmitting ? disabledClass : ""}`}
                         >
                             Cancel
                         </button>
                         <button
-                            // CORRECTED: Call handleEditSave with the local edited state
                             onClick={() => handleEditSave(editedAnnotation)}
                             disabled={isSubmitting}
-                            className={`${baseButtonClass} bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500 ${isSubmitting ? disabledClass : ''}`}
+                            className={`${baseButtonClass} bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500 ${isSubmitting ? disabledClass : ""}`}
                         >
-                            {isSubmitting ? 'Saving...' : 'Save Changes'}
+                            {isSubmitting ? "Saving..." : "Save Changes"}
                         </button>
                     </div>
                 </div>
@@ -358,7 +400,7 @@ export default function AnnotationView({
                     )}
     
                     {/* Third Row: Range and By */}
-                    <div className="mt-2 flex flex-wrap text-base items-center gap-x-4 gap-y-1">
+                    <div className="mt-2 flex flex-wrap text-sm items-center gap-x-4 gap-y-1">
                         {/* Range */}
                         <div>
                             <span className="font-medium text-gray-900"><b>Range:</b></span>
@@ -391,7 +433,7 @@ export default function AnnotationView({
                             <button
                                 onClick={() => handleStatusChange('rejected')}
                                 disabled={isSubmitting || selectedAnnotation.status === 'rejected'}
-                                className={`${actionButtonBase} text-white ${selectedAnnotation.status === 'rejected' ? 'bg-yellow-300 ' + disabledButtonClass : 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-400'} ${isSubmitting ? disabledButtonClass : ''}`}
+                                className={`${actionButtonBase} text-white ${selectedAnnotation.status === 'rejected' ? 'bg-orange-300 ' + disabledButtonClass : 'bg-orange-500 hover:bg-orange-600 focus:ring-yellow-400'} ${isSubmitting ? disabledButtonClass : ''}`}
                             >
                                 Reject
                             </button>
