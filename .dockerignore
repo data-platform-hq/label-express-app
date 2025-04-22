@@ -1,0 +1,14 @@
+.git
+.github
+.vscode
+*.log
+.env
+.env*.local
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next
+dist
+build
+# Add any other files/folders not needed for the build or runtime

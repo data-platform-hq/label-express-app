@@ -5,7 +5,7 @@ import "@/app/globals.css";
 import { AuthProvider } from "@/app/contexts/AuthContext";
 import UserMenu from "@/app/components/Auth/UserMenu";
 import Link from "next/link";
-import { getSession } from "@/lib/auth";
+
 
 export const metadata: Metadata = {
   title: "Label Express",
@@ -17,8 +17,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getSession();
-  const isAdmin = session?.user?.role === "admin";
+
+
   
   return (
     <html lang="en" className="h-full">

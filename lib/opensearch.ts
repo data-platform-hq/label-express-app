@@ -1,26 +1,53 @@
 // lib/opensearch.ts
 import { Client } from '@opensearch-project/opensearch';
-import { Annotation } from '@/app/types/types';
+import { Annotation } from '../app/types/types';
 
-// Configure your OpenSearch client
-const client = new Client({
-  // create url from process.env.OPENSEARCH_HOST, process.env.OPENSEARCH_PROTOCOL, process.env.OPENSEARCH_PORT
-  node: `${process.env.OPENSEARCH_PROTOCOL}://${process.env.OPENSEARCH_HOST}:${process.env.OPENSEARCH_PORT}`,
-  ssl: {
-    rejectUnauthorized: false // Set to true in production with proper certificates
-  },
+// Declare client variable but DON'T instantiate it globally
+let client: Client | null = null;
 
+// Function to get or create the client instance (Singleton)
+function getClient(): Client {
+  // If client already exists, return it
+  if (client) {
+    return client;
+  }
 
-  auth: {
-    username: process.env.OPENSEARCH_USERNAME || '',
-    password: process.env.OPENSEARCH_PASSWORD || '',
-  },
-});
+  // If client doesn't exist, create it now (using runtime ENV vars)
+  console.log("Initializing OpenSearch Client..."); // Add log for debugging
+  const nodeUrl = `${process.env.OPENSEARCH_PROTOCOL}://${process.env.OPENSEARCH_HOST}:${process.env.OPENSEARCH_PORT}`;
+  const username = process.env.OPENSEARCH_USERNAME;
+  const password = process.env.OPENSEARCH_PASSWORD;
+
+  // Basic check for required variables at runtime
+  if (!process.env.OPENSEARCH_PROTOCOL || !process.env.OPENSEARCH_HOST || !process.env.OPENSEARCH_PORT || !username || !password) {
+     console.error("FATAL: OpenSearch environment variables (PROTOCOL, HOST, PORT, USERNAME, PASSWORD) are not fully set.");
+     // Optionally throw an error to prevent partial initialization
+     throw new Error("Missing required OpenSearch environment variables.");
+  }
+
+  console.log(`Connecting to OpenSearch node: ${nodeUrl}`); // Log the URL
+
+  client = new Client({
+    node: nodeUrl,
+    ssl: {
+      rejectUnauthorized: process.env.NODE_ENV === 'production', // More secure default for prod
+    },
+    auth: {
+      username: username,
+      password: password,
+    },
+    // Optional: Add request timeout
+    // requestTimeout: 60000,
+  });
+
+  return client;
+}
 
 // Get all available indices
 export async function getIndices() {
   try {
-    const response = await client.cat.indices({ format: 'json' });
+    const osClient = getClient(); // Get client instance
+    const response = await osClient.cat.indices({ format: 'json' });
     return response.body.map((index: any) => index.index)
       .filter((index: string) => !index.startsWith('.'));
   } catch (error) {
@@ -32,7 +59,8 @@ export async function getIndices() {
 // Get mappings for an index to determine field types
 export async function getIndexMapping(index: string) {
   try {
-    const response = await client.indices.getMapping({ index });
+    const osClient = getClient(); // Get client instance
+    const response = await osClient.indices.getMapping({ index });
     const mappings = response.body[index].mappings.properties || {};
     
     const fields: { dateFields: string[], termFields: string[], numericFields: string[] } = {
@@ -61,7 +89,8 @@ export async function getIndexMapping(index: string) {
 // Get stats for an index to determine date range
 export async function getIndexStats(index: string, timestamp: string, filterField: string, filterValue: string) {
   try {
-    const response = await client.search({
+    const osClient = getClient(); // Get client instance
+    const response = await osClient.search({
       index,
       body: {
         size: 0,
@@ -119,6 +148,8 @@ export async function performAggregation(index: string, params: {
   try {
     const { timestamp, startDate, endDate, filterField, filterValue } = params;
 
+    const osClient = getClient(); // Get client instance
+
     const filterQuery = {
       bool: {
         filter: [
@@ -148,7 +179,7 @@ export async function performAggregation(index: string, params: {
       aggs,
     };
        
-    const response = await client.search({
+    const response = await osClient.search({
       index,
       body: searchBody,
     });
@@ -170,7 +201,8 @@ export async function indexAnnotationRecord(annotation: Annotation) {
   const annotationIndex = process.env.ANNOTATION_INDEX || 'default_annotation_index';
   
   try {
-    const response = await client.index({
+    const osClient = getClient(); // Get client instance
+    const response = await osClient.index({
       index: annotationIndex,
       body: annotation,
     });
@@ -222,8 +254,8 @@ export async function searchAnnotations(startDate: string, endDate: string, filt
       size: 10000,
       query: filterQuery
     };
-
-    const response = await client.search({
+    const osClient = getClient(); // Get client instance
+    const response = await osClient.search({
       index: annotationIndex,
       body: searchBody,
     });
@@ -252,7 +284,8 @@ export async function deleteAnnotation(annotationId: string) {
 
   // update document and set deleted flag to true
   try {
-    const response = await client.update({
+    const osClient = getClient(); // Get client instance
+    const response = await osClient.update({
       index: annotationIndex,
       id: annotationId,
       body: {
@@ -294,8 +327,9 @@ export async function updateAnnotation(annotationId: string, actionType: string,
       throw new Error('Payload is required for update action');
     }
     
+    const osClient = getClient(); // Get client instance
     // Execute the update operation
-    const response = await client.update({
+    const response = await osClient.update({
       index: annotationIndex,
       id: annotationId,
       body: { doc },
@@ -335,8 +369,9 @@ export async function searchFilterValues(
     //     },
     //   }
     // });
-
-    const response = await client.search({
+    
+    const osClient = getClient(); // Get client instance
+    const response = await osClient.search({
       index: indexName,
       body: {
         size: 0,
@@ -414,5 +449,6 @@ export function makeTermListAggs({ term, interval, numericField, timestamp }: Ma
 }
 
 export function refreshIndex(index: string) {
-  return client.indices.refresh({ index });
+  const osClient = getClient(); // Get client instance
+  return osClient.indices.refresh({ index });
 }

@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  # Main application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXTAUTH_SECRET=f/oC/p47DC59yKn6gjKUd/GNiSH0aRlam3/Yt7beLws=
+      - NEXTAUTH_URL=http://localhost:3000
+      - OPENSEARCH_HOST=host.docker.internal
+      - OPENSEARCH_PORT=9200
+      - OPENSEARCH_PROTOCOL=https
+      - OPENSEARCH_USERNAME=admin
+      - OPENSEARCH_PASSWORD=Alexi@5we%6
+      - ANNOTATION_INDEX=annotations
+      - DATABASE_URL=file:./data/prod.db
+    volumes:
+      - label-express-data:/app/data
+    restart: unless-stopped
+    # This allows the container to access services on the host machine
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  label-express-data:

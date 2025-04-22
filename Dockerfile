@@ -1,5 +1,5 @@
 # ---- Base Node ----
-    FROM node:18-alpine AS base
+    FROM node:23-alpine AS base
     # Install git, openssl needed for prisma and potentially bcrypt
     RUN apk add --no-cache libc6-compat openssl git
     WORKDIR /app
@@ -9,6 +9,7 @@
     WORKDIR /app
     COPY package.json package-lock.json* ./
     # Install ALL dependencies including devDependencies (Prisma CLI is often a devDep)
+
     RUN npm install
     
     # ---- Builder ----
@@ -30,7 +31,7 @@
     # Set environment to production
     ENV NODE_ENV production
     # Optionally disable Next.js telemetry
-    # ENV NEXT_TELEMETRY_DISABLED 1
+    ENV NEXT_TELEMETRY_DISABLED 1
     
     # Set DATABASE_URL (adjust path if needed, ensure it matches volume mount point)
     ENV DATABASE_URL="file:./prod.db"
@@ -40,8 +41,8 @@
     
     # Copy necessary production node_modules (if any are generated differently)
     # Often safer to copy the whole node_modules from deps if unsure, but less optimized
-    # COPY --from=deps /app/node_modules ./node_modules
-    # --- OR --- Selectively copy if possible
+    COPY --from=deps /app/node_modules ./node_modules
+
     
     # Copy application artifacts from the builder stage
     COPY --from=builder /app/public ./public

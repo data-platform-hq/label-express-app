@@ -84,8 +84,23 @@ yarn start
 ### Docker
 
 ```
-#Docker
+#Build image
 docker build -t label-express-app .
-docker run -p 3000:3000 -v $(pwd)/data:/app/data label-express-app
+
+# Create volume
+docker volume create label-express-data
+
+# Run
+docker run -d \
+  -p 3000:3000 \
+  --name label-express-container \
+  -v label-express-data:/app/data \
+  -e NEXTAUTH_SECRET="your_production_secret_here" \
+  -e NEXTAUTH_URL="http://your_domain_or_ip:3000" \
+  # Add other required runtime environment variables using -e
+  # -e OPENSEARCH_HOST=your_opensearch_host
+  # -e OPENSEARCH_PASSWORD=your_opensearch_password
+  # etc.
+  label-express-app
 
 ```
