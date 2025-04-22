@@ -327,14 +327,13 @@ export default function AnnotationView({
       };
 
       return (
-        // Added a container with padding and border
-        <div className="p-3 border-t border-gray-200 bg-gray-50">
-            <div className="flex flex-wrap justify-between items-center gap-y-2"> {/* Outer container */}
+        <div className="p-2 border-t border-gray-200 bg-gray-50 h-[120px]">
+            <div className="flex h-full items-center justify-between gap-x-4"> {/* Flex container ensures vertical alignment */}
                 
-                {/* Details Section */}
-                <div className="flex flex-col text-xs text-gray-700 flex-grow mr-4">
-                    {/* First Row: Status, Type, Indicator */}
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                {/* Left Column: Annotation Details */}
+                <div className="flex flex-col text-gray-700 justify-center h-full"> {/* Centered content */}
+                    {/* First Row: Status and Type */}
+                    <div className="flex flex-wrap text-s items-center gap-x-4 gap-y-1">
                         {/* Status */}
                         <div>
                             <span className="font-medium text-gray-900"><b>Status:</b></span>
@@ -348,19 +347,21 @@ export default function AnnotationView({
                                 <span className="font-medium text-gray-900"><b>Type:</b></span> {selectedAnnotation.annotationType}
                             </div>
                         )}
-                        {/* Indicator */}
-                        {selectedAnnotation.indicator && (
-                            <div>
-                                <span className="font-medium text-gray-900"><b>Indicator:</b></span> {selectedAnnotation.indicator}
-                            </div>
-                        )}
                     </div>
     
-                    {/* Second Row: Range, By */}
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
+                    {/* Second Row: Indicator */}
+                    {selectedAnnotation.indicator && (
+                        <div className="mt-2 break-words text-sm whitespace-normal text-gray-900"> {/* Natural wrapping */}
+                            <span className="font-medium"><b>Indicator:</b></span>
+                            <span className="ml-1">{selectedAnnotation.indicator}</span>
+                        </div>
+                    )}
+    
+                    {/* Third Row: Range and By */}
+                    <div className="mt-2 flex flex-wrap text-base items-center gap-x-4 gap-y-1">
                         {/* Range */}
                         <div>
-                            <span className="font-medium text-gray-900"><b>Range:</b></span> 
+                            <span className="font-medium text-gray-900"><b>Range:</b></span>
                             {formatDate(selectedAnnotation.startDate)} - {formatDate(selectedAnnotation.endDate)}
                         </div>
                         {/* Created By */}
@@ -372,10 +373,9 @@ export default function AnnotationView({
                         )}
                     </div>
                 </div>
-                
-                {/* Actions Section */}
-                <div className="flex-shrink-0 flex items-center space-x-2">
-                    {/* Conditionally render buttons based on userRole and userId */}
+    
+                {/* Right Column: Action Buttons */}
+                <div className="flex-shrink-0 flex items-center space-x-2"> {/* Vertically centered buttons */}
                     {userRole === 'admin' || userRole === 'approver' ? (
                         <>
                             {/* Approve Button */}
@@ -383,7 +383,6 @@ export default function AnnotationView({
                                 onClick={() => handleStatusChange('approved')}
                                 disabled={isSubmitting || selectedAnnotation.status === 'approved'}
                                 className={`${actionButtonBase} text-white ${selectedAnnotation.status === 'approved' ? 'bg-green-300 ' + disabledButtonClass : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'} ${isSubmitting ? disabledButtonClass : ''}`}
-                                title="Approve Annotation"
                             >
                                 Approve
                             </button>
@@ -393,7 +392,6 @@ export default function AnnotationView({
                                 onClick={() => handleStatusChange('rejected')}
                                 disabled={isSubmitting || selectedAnnotation.status === 'rejected'}
                                 className={`${actionButtonBase} text-white ${selectedAnnotation.status === 'rejected' ? 'bg-yellow-300 ' + disabledButtonClass : 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-400'} ${isSubmitting ? disabledButtonClass : ''}`}
-                                title="Reject Annotation"
                             >
                                 Reject
                             </button>
@@ -403,7 +401,6 @@ export default function AnnotationView({
                                 onClick={() => setEditModal({ isOpen: true, annotation: selectedAnnotation })}
                                 disabled={isSubmitting}
                                 className={`${actionButtonBase} text-gray-700 bg-white border-gray-300 hover:bg-gray-50 focus:ring-blue-500 ${isSubmitting ? disabledButtonClass : ''}`}
-                                title="Edit Annotation"
                             >
                                 Edit
                             </button>
@@ -413,38 +410,35 @@ export default function AnnotationView({
                                 onClick={() => setDeleteModal({ isOpen: true, annotationId: selectedAnnotation.id! })}
                                 disabled={isSubmitting}
                                 className={`${actionButtonBase} text-white bg-red-600 hover:bg-red-700 focus:ring-red-500 ${isSubmitting ? disabledButtonClass : ''}`}
-                                title="Delete Annotation"
                             >
                                 Delete
                             </button>
                         </>
                     ) : selectedAnnotation.createdBy?.userId === userId ? (
                         <>
-                            {/* Edit Button (User can edit if they created the annotation) */}
+                            {/* Edit Button */}
                             <button
                                 onClick={() => setEditModal({ isOpen: true, annotation: selectedAnnotation })}
                                 disabled={isSubmitting}
                                 className={`${actionButtonBase} text-gray-700 bg-white border-gray-300 hover:bg-gray-50 focus:ring-blue-500 ${isSubmitting ? disabledButtonClass : ''}`}
-                                title="Edit Annotation"
                             >
                                 Edit
                             </button>
     
-                            {/* Delete Button (User can delete if they created the annotation) */}
+                            {/* Delete Button */}
                             <button
                                 onClick={() => setDeleteModal({ isOpen: true, annotationId: selectedAnnotation.id! })}
                                 disabled={isSubmitting}
                                 className={`${actionButtonBase} text-white bg-red-600 hover:bg-red-700 focus:ring-red-500 ${isSubmitting ? disabledButtonClass : ''}`}
-                                title="Delete Annotation"
                             >
                                 Delete
                             </button>
                         </>
-                    ) : null /* If the user is neither admin, approver, nor the creator, show nothing */}
+                    ) : null}
                 </div>
             </div>
     
-            {/* Modals are rendered conditionally outside the main flow */}
+            {/* Modals */}
             <DeleteConfirmationModal />
             <EditAnnotationModal />
         </div>

@@ -9,7 +9,7 @@ interface AnnotationDetailsProps {
 
 export default function AnnotationDetails({ results, uniqueTerms, selectedAnnotation }: AnnotationDetailsProps) {
   return (
-    <div className="px-4 py-5 sm:p-6">
+    <div className="px-4 py-2 sm:p-9">
          {/* Show annotation details if one is selected */}
          {selectedAnnotation && (
         <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
