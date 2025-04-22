@@ -60,7 +60,7 @@ def generate_esp_pump_data(start_date, end_date, assets=None, specific_sensors=N
     # Define ESP pump operational issues with additional types
     pump_issues = {
         "gas_locking": {
-            "probability": 0.00005,
+            "probability": 0.000005,
             "duration": (30, 120),
             "description": "Gas locking detected - pump efficiency severely reduced",
             "effects": {
@@ -79,7 +79,7 @@ def generate_esp_pump_data(start_date, end_date, assets=None, specific_sensors=N
             }
         },
         "gas_interference": {
-            "probability": 0.0001,
+            "probability": 0.00001,
             "duration": (15, 60),
             "description": "Gas interference detected - flow rate fluctuations observed",
             "effects": {
@@ -98,7 +98,7 @@ def generate_esp_pump_data(start_date, end_date, assets=None, specific_sensors=N
             }
         },
         "sanding": {
-            "probability": 0.00002,
+            "probability": 0.000002,
             "duration": (60, 240),
             "description": "Sand production detected - increased wear and vibration",
             "effects": {
@@ -118,7 +118,7 @@ def generate_esp_pump_data(start_date, end_date, assets=None, specific_sensors=N
             }
         },
         "shutdown": {
-            "probability": 0.000005,
+            "probability": 0.0000005,
             "duration": (120, 480),
             "description": "Pump shutdown - maintenance required",
             "effects": {
@@ -138,7 +138,7 @@ def generate_esp_pump_data(start_date, end_date, assets=None, specific_sensors=N
             }
         },
         "motor_overheating": {
-            "probability": 0.00003,
+            "probability": 0.000003,
             "duration": (45, 180),
             "description": "Motor overheating detected - cooling system issue or excessive load",
             "effects": {
@@ -156,7 +156,7 @@ def generate_esp_pump_data(start_date, end_date, assets=None, specific_sensors=N
             }
         },
         "pump_cavitation": {
-            "probability": 0.000025,
+            "probability": 0.0000025,
             "duration": (20, 90),
             "description": "Pump cavitation - insufficient suction pressure causing vapor bubbles",
             "effects": {
@@ -174,7 +174,7 @@ def generate_esp_pump_data(start_date, end_date, assets=None, specific_sensors=N
             }
         },
         "scale_buildup": {
-            "probability": 0.000015,
+            "probability": 0.0000015,
             "duration": (240, 720),
             "description": "Scale buildup detected - gradual performance degradation",
             "effects": {
@@ -192,7 +192,7 @@ def generate_esp_pump_data(start_date, end_date, assets=None, specific_sensors=N
             }
         },
         "electrical_fault": {
-            "probability": 0.000008,
+            "probability": 0.0000008,
             "duration": (10, 60),
             "description": "Electrical fault detected - power supply or motor winding issue",
             "effects": {
@@ -209,7 +209,7 @@ def generate_esp_pump_data(start_date, end_date, assets=None, specific_sensors=N
             }
         },
         "bearing_wear": {
-            "probability": 0.000012,
+            "probability": 0.0000012,
             "duration": (180, 600),
             "description": "Bearing wear detected - increased friction and vibration",
             "effects": {
@@ -226,7 +226,7 @@ def generate_esp_pump_data(start_date, end_date, assets=None, specific_sensors=N
             }
         },
         "pump_wear": {
-            "probability": 0.000018,
+            "probability": 0.0000018,
             "duration": (240, 720),
             "description": "Pump wear detected - impeller or diffuser erosion",
             "effects": {
@@ -242,7 +242,7 @@ def generate_esp_pump_data(start_date, end_date, assets=None, specific_sensors=N
             }
         },
         "water_breakthrough": {
-            "probability": 0.000014,
+            "probability": 0.0000014,
             "duration": (360, 1440),  # Can be long-lasting
             "description": "Water breakthrough detected - increased water production",
             "effects": {
@@ -255,7 +255,7 @@ def generate_esp_pump_data(start_date, end_date, assets=None, specific_sensors=N
             }
         },
         "vfd_fault": {
-            "probability": 0.000007,
+            "probability": 0.0000007,
             "duration": (15, 120),
             "description": "Variable frequency drive fault - electrical or cooling issue",
             "effects": {
@@ -268,6 +268,10 @@ def generate_esp_pump_data(start_date, end_date, assets=None, specific_sensors=N
             }
         }
     }
+
+    # Increase issue probabilities for more visible events
+    for issue in pump_issues:
+        pump_issues[issue]["probability"] *= 5  # Make issues 5x more common for better visibility
 
     # Use specified assets or all assets
     assets_to_use = assets if assets else all_assets
@@ -284,8 +288,14 @@ def generate_esp_pump_data(start_date, end_date, assets=None, specific_sensors=N
     last_values = {}
 
     # Track active issues for each asset
-    active_issues = {asset: {"issue": None, "end_time": None, "severity": 0, "start_time": None} for asset in
-                     assets_to_use}
+    active_issues = {asset: {
+        "issue": None,
+        "end_time": None,
+        "severity": 0,
+        "start_time": None,
+        "affected_sensors": {},
+        "annotation_created": False
+    } for asset in assets_to_use}
 
     # Track normal values to restore after issues resolve
     normal_values = {asset: {} for asset in assets_to_use}
@@ -311,109 +321,143 @@ def generate_esp_pump_data(start_date, end_date, assets=None, specific_sensors=N
                     sensor_config = sensors_to_use[sensor_name]
                     if sensor_config["is_float"]:
                         normal_values[asset_name][sensor_name] = round(random.uniform(
-                            sensor_config["min"], sensor_config["max"]), 2)
+                            sensor_config["min"] + (sensor_config["max"] - sensor_config["min"]) * 0.3,
+                            sensor_config["max"] - (sensor_config["max"] - sensor_config["min"]) * 0.3), 2)
                     else:
                         normal_values[asset_name][sensor_name] = random.randint(
-                            int(sensor_config["min"]), int(sensor_config["max"]))
+                            int(sensor_config["min"] + (sensor_config["max"] - sensor_config["min"]) * 0.3),
+                            int(sensor_config["max"] - (sensor_config["max"] - sensor_config["min"]) * 0.3))
 
-            for sensor_name, sensor_config in sensors_to_use.items():
-                asset_sensor_key = f"{asset_name}_{sensor_name}"
+            # Process all sensors for this asset at each timestamp
+            current_time = datetime(current_date.year, current_date.month, current_date.day, 0, 0, 0)
 
-                # Initialize with normal value if this is the first reading
-                if asset_sensor_key not in last_values:
-                    last_values[asset_sensor_key] = normal_values[asset_name][sensor_name]
+            # Generate minute-by-minute readings for the day
+            while current_time <= day_end:
+                # Create timestamp with format: 2024-10-08T08:08:00.000Z
+                timestamp = current_time.strftime("%Y-%m-%dT%H:%M:%S") + ".000Z"
 
-                current_time = datetime(current_date.year, current_date.month, current_date.day, 0, 0, 0)
+                # Check if an active issue has ended
+                if active_issues[asset_name]["end_time"] and current_time >= active_issues[asset_name]["end_time"]:
+                    active_issues[asset_name] = {
+                        "issue": None,
+                        "end_time": None,
+                        "severity": 0,
+                        "start_time": None,
+                        "affected_sensors": {},
+                        "annotation_created": False
+                    }
+                    # Don't immediately reset values - they'll gradually return to normal
 
-                # Generate minute-by-minute readings for the day
-                while current_time <= day_end:
-                    # Create timestamp with microsecond precision and ISO format
-                    # Create timestamp with format like this: 2024-10-08T08:08:00.000Z
-                    timestamp = current_time.strftime("%Y-%m-%dT%H:%M:%S") + ".000Z"
+                # Check for new issues if no active issue
+                if active_issues[asset_name]["issue"] is None:
+                    for issue_name, issue_config in pump_issues.items():
+                        if random.random() < issue_config["probability"]:
+                            # Start a new issue
+                            duration_minutes = random.randint(issue_config["duration"][0],
+                                                              issue_config["duration"][1])
 
+                            # Round to nearest 5 minutes for better visibility in charts
+                            rounded_minutes = (current_time.minute // 5) * 5
+                            issue_start_time = current_time.replace(minute=rounded_minutes, second=0, microsecond=0)
+                            issue_end_time = issue_start_time + timedelta(minutes=duration_minutes)
 
-                    # Check if an active issue has ended
-                    if active_issues[asset_name]["end_time"] and current_time >= active_issues[asset_name]["end_time"]:
-                        active_issues[asset_name] = {"issue": None, "end_time": None, "severity": 0, "start_time": None}
-                        # Don't immediately reset values - they'll gradually return to normal
+                            # Use higher severity for more dramatic effects
+                            severity = random.uniform(0.9, 1.0)  # 90-100% severity
 
-                    # Check for new issues if no active issue
-                    if active_issues[asset_name]["issue"] is None:
-                        for issue_name, issue_config in pump_issues.items():
-                            if random.random() < issue_config["probability"]:
-                                # Start a new issue
-                                duration_minutes = random.randint(issue_config["duration"][0],
-                                                                  issue_config["duration"][1])
-                                issue_start_time = current_time
-                                issue_end_time = current_time + timedelta(minutes=duration_minutes)
+                            active_issues[asset_name] = {
+                                "issue": issue_name,
+                                "start_time": issue_start_time,
+                                "end_time": issue_end_time,
+                                "severity": severity,
+                                "affected_sensors": {},
+                                "annotation_created": False
+                            }
+                            break
 
-                                active_issues[asset_name] = {
-                                    "issue": issue_name,
-                                    "start_time": issue_start_time,
-                                    "end_time": issue_end_time,
-                                    "severity": random.uniform(0.7, 1.0)  # Random severity between 70-100%
-                                }
+                # Generate sensor readings for this timestamp
+                for sensor_name, sensor_config in sensors_to_use.items():
+                    asset_sensor_key = f"{asset_name}_{sensor_name}"
 
-                                # Create annotation document
-                                annotation = {
-                                    "sourceIndex": "esp_pump_data",  # Keep as is
-                                    "filterField": "asset_name",  # Keep as is
-                                    "filterValue": asset_name,  # Set pump name
-                                    "description": issue_config["description"],
-                                    "startDate": issue_start_time.strftime("%Y-%m-%dT%H:%M:%S") + ".000Z",
-                                    "endDate": issue_end_time.strftime("%Y-%m-%dT%H:%M:%S") + ".000Z",
-                                    "deleted": False,  # Keep as false
-                                    "annotationType": issue_name.replace("_", " ").title(),  # Format the issue name
-                                    "indicator": "critical",  # Keep as critical
-                                    "recommendation": "monitor"  # Keep as monitor
-                                }
+                    # Initialize with normal value if this is the first reading
+                    if asset_sensor_key not in last_values:
+                        last_values[asset_sensor_key] = normal_values[asset_name][sensor_name]
 
-                                # Add to annotations list
-                                annotations.append(annotation)
-
-                                break
-
-                    # Base drift - small random changes for continuous operation
-                    drift_factor = 0.01  # 1% maximum change per reading for continuous operation
-
-                    # Calculate sensor value based on normal operation or active issue
+                    # Get current value
                     current_value = last_values[asset_sensor_key]
 
+                    # Base drift - small random changes for continuous operation
+                    drift_factor = 0.005  # 0.5% maximum change per reading for continuous operation
+
+                    # Calculate sensor value based on normal operation or active issue
                     if active_issues[asset_name]["issue"]:
                         issue_name = active_issues[asset_name]["issue"]
                         issue_config = pump_issues[issue_name]
                         severity = active_issues[asset_name]["severity"]
 
+                        # Calculate time progression through the issue (0.0 to 1.0)
+                        issue_start = active_issues[asset_name]["start_time"]
+                        issue_end = active_issues[asset_name]["end_time"]
+                        issue_duration = (issue_end - issue_start).total_seconds()
+                        time_elapsed = (current_time - issue_start).total_seconds()
+                        progression = min(1.0, time_elapsed / issue_duration)
+
                         # Apply issue effects if this sensor is affected
                         if sensor_name in issue_config["effects"]:
                             effect = issue_config["effects"][sensor_name]["factor"]
 
-                            # Calculate target value during issue
+                            # Store initial value if not already stored
+                            if sensor_name not in active_issues[asset_name]["affected_sensors"]:
+                                active_issues[asset_name]["affected_sensors"][sensor_name] = {
+                                    "initial": current_value,
+                                    "current": current_value,
+                                    "unit": sensor_config["unit"],
+                                    "effect": effect
+                                }
+
+                            # Make the effect more pronounced based on progression
+                            # Start with small changes and gradually increase to full effect
+                            applied_effect = effect * severity * min(1.0, progression * 2)  # Faster ramp-up
+
+                            # Calculate target value during issue - use direct percentage changes
+                            normal_value = normal_values[asset_name][sensor_name]
+
                             if effect < 0:  # Reduction effect
-                                # For negative effects, reduce the value toward min or zero
-                                reduction = abs(effect) * severity
                                 if effect == -1.0:  # Complete shutdown
                                     target_value = 0 if sensor_name != "motor_temperature" else sensor_config["min"]
                                 else:
-                                    normal_value = normal_values[asset_name][sensor_name]
-                                    min_value = sensor_config["min"]
-                                    range_to_min = normal_value - min_value
-                                    target_value = normal_value - (range_to_min * reduction)
+                                    # Calculate target as percentage reduction from normal
+                                    reduction = abs(applied_effect)
+                                    target_value = normal_value * (1 - reduction)
+                                    # Ensure it's not below minimum
+                                    target_value = max(target_value, sensor_config["min"])
                             else:  # Increase effect
-                                # For positive effects, increase the value toward max
-                                increase = effect * severity
-                                normal_value = normal_values[asset_name][sensor_name]
-                                max_value = sensor_config["max"]
-                                range_to_max = max_value - normal_value
-                                target_value = normal_value + (range_to_max * increase)
+                                # Calculate target as percentage increase from normal
+                                increase = applied_effect
+                                target_value = normal_value * (1 + increase)
+                                # Ensure it's not above maximum
+                                target_value = min(target_value, sensor_config["max"])
 
-                            # Gradually move toward target value (10% change per reading)
-                            adjustment_rate = 0.1
+                            # Adjust how quickly we move toward the target value based on the issue type
+                            if issue_name in ["shutdown", "electrical_fault", "vfd_fault"]:
+                                adjustment_rate = 0.3  # Fast changes (30% per reading)
+                            elif issue_name in ["gas_locking", "gas_interference", "pump_cavitation"]:
+                                adjustment_rate = 0.2  # Medium changes (20% per reading)
+                            else:
+                                adjustment_rate = 0.1  # Slower changes (10% per reading)
+
+                            # Apply the adjustment
                             sensor_value = current_value + (target_value - current_value) * adjustment_rate
 
-                            # Apply small random fluctuation
-                            fluctuation = sensor_value * random.uniform(-0.02, 0.02)
+                            # Add appropriate fluctuation based on issue type
+                            if issue_name in ["vibration", "gas_interference", "pump_cavitation"]:
+                                fluctuation = sensor_value * random.uniform(-0.03, 0.03)  # More erratic
+                            else:
+                                fluctuation = sensor_value * random.uniform(-0.01, 0.01)  # More stable
+
                             sensor_value += fluctuation
+
+                            # Update the current value in affected_sensors
+                            active_issues[asset_name]["affected_sensors"][sensor_name]["current"] = sensor_value
                         else:
                             # Sensors not directly affected still have normal drift
                             base_change = current_value * random.uniform(-drift_factor, drift_factor)
@@ -426,7 +470,7 @@ def generate_esp_pump_data(start_date, end_date, assets=None, specific_sensors=N
                             # Move 5% closer to normal value
                             sensor_value = current_value + (normal_value - current_value) * 0.05
                             # Add small random fluctuation
-                            fluctuation = sensor_value * random.uniform(-0.01, 0.01)
+                            fluctuation = sensor_value * random.uniform(-0.005, 0.005)
                             sensor_value += fluctuation
                         else:
                             # Regular drift
@@ -455,19 +499,116 @@ def generate_esp_pump_data(start_date, end_date, assets=None, specific_sensors=N
                         "sensor_unit": sensor_config["unit"]
                     }
 
-                    # No issue information added to the main documents
-
                     batch.append(document)
 
                     # Update for next iteration
                     last_values[asset_sensor_key] = sensor_value
-                    current_time += timedelta(minutes=1)
+
+                # Check if we should create annotation after processing all sensors for this timestamp
+                if (active_issues[asset_name]["issue"] and
+                        not active_issues[asset_name]["annotation_created"] and
+                        current_time >= active_issues[asset_name]["start_time"] + timedelta(
+                            minutes=5)):  # Wait 5 minutes
+
+                    # Create annotation based on actual sensor values
+                    issue_name = active_issues[asset_name]["issue"]
+                    issue_config = pump_issues[issue_name]
+                    affected_sensors = active_issues[asset_name]["affected_sensors"]
+
+                    # Only create annotation if we have affected sensors with significant changes
+                    if affected_sensors:
+                        # Calculate actual changes for indicator
+                        indicator_parts = []
+                        for sensor_name, data in affected_sensors.items():
+                            initial = data["initial"]
+                            current = data["current"]
+                            unit = data["unit"]
+
+                            # Calculate actual percentage change
+                            if initial > 0:
+                                pct_change = (current - initial) / initial * 100
+                                direction = "↓" if pct_change < 0 else "↑"
+
+                                # Only include if change is significant
+                                if abs(pct_change) > 5:
+                                    if sensors_to_use[sensor_name]["is_float"]:
+                                        current_formatted = round(current, 2)
+                                    else:
+                                        current_formatted = int(current)
+
+                                    indicator_parts.append(
+                                        f"{sensor_name.replace('_', ' ')}: {direction}{abs(int(pct_change))}% ({current_formatted} {unit})"
+                                    )
+
+                        # Only create annotation if we have significant changes to report
+                        if indicator_parts:
+                            # Sort by absolute percentage change (largest first)
+                            indicator_parts.sort(key=lambda x: int(x.split('%')[0].split('↓')[-1].split('↑')[-1]),
+                                                 reverse=True)
+                            indicator_text = ", ".join(indicator_parts[:3])  # Top 3 most affected
+
+                            # Create urgency based on severity
+                            severity = active_issues[asset_name]["severity"]
+                            if severity > 0.95:
+                                urgency = "URGENT: Immediate action required. "
+                            elif severity > 0.9:
+                                urgency = "High priority: Schedule maintenance within 24 hours. "
+                            else:
+                                urgency = "Medium priority: Monitor closely and plan intervention. "
+
+                            # Base recommendation
+                            recommendation_base = {
+                                "gas_locking": "Implement gas separation techniques and reduce pump intake pressure.",
+                                "gas_interference": "Adjust pump speed and intake pressure. Consider gas handling equipment.",
+                                "sanding": "Install sand control equipment and schedule pump cleaning.",
+                                "shutdown": "Perform complete maintenance inspection. Check electrical connections.",
+                                "motor_overheating": "Check cooling system and reduce load. Inspect motor insulation.",
+                                "pump_cavitation": "Increase intake pressure and check for flow restrictions.",
+                                "scale_buildup": "Schedule chemical treatment and mechanical cleaning.",
+                                "electrical_fault": "Inspect VFD and power supply. Check motor winding resistance.",
+                                "bearing_wear": "Replace bearings and check shaft alignment. Verify lubrication.",
+                                "pump_wear": "Schedule impeller replacement. Check for abrasive particles.",
+                                "water_breakthrough": "Adjust production strategy and monitor water cut.",
+                                "vfd_fault": "Check VFD cooling and electrical connections. Verify power quality."
+                            }[issue_name]
+
+                            createdBy = {
+                                "email": "system@labelexpress.com",
+                                "userId": "1",
+                            }
+
+                            # Create annotation with actual values
+                            annotation = {
+                                "sourceIndex": "esp_pump_data",
+                                "filterField": "asset_name",
+                                "filterValue": asset_name,
+                                "description": f"{issue_config['description']} (Severity: {int(severity * 100)}%)",
+                                "startDate": active_issues[asset_name]["start_time"].strftime(
+                                    "%Y-%m-%dT%H:%M:%S") + ".000Z",
+                                "endDate": active_issues[asset_name]["end_time"].strftime(
+                                    "%Y-%m-%dT%H:%M:%S") + ".000Z",
+                                "deleted": False,
+                                "annotationType": issue_name.replace("_", " ").title(),
+                                "indicator": f"Detected {issue_name.replace('_', ' ')} in {asset_name}: {indicator_text}",
+                                "recommendation": f"{urgency}{recommendation_base}",
+                                "createdBy": createdBy,
+                                "createdAt": current_time.strftime("%Y-%m-%dT%H:%M:%S") + ".000Z",
+                                "status": "created"
+                            }
+
+                            # Add to annotations list
+                            annotations.append(annotation)
+
+                            # Mark annotation as created
+                            active_issues[asset_name]["annotation_created"] = True
+
+                # Move to next minute
+                current_time += timedelta(minutes=1)
 
         # Yield the batch for this day along with any annotations
         yield {"data": batch, "annotations": annotations}
         annotations = []  # Clear annotations after yielding
         current_date += timedelta(days=1)
-
 
 
 def opensearch_doc_generator(documents, index_name):
@@ -515,7 +656,7 @@ def write_to_opensearch(documents_generator, index_name="esp_pump_data", annotat
     # Connect to OpenSearch
     os_client = OpenSearch(
         ['https://127.0.0.1:9200'],
-        http_auth=('admin', 'password'),
+        http_auth=('admin', 'Alexi@5we%6'),
         verify_certs=False,  # Disable SSL certificate verification
         ssl_show_warn=False,
         ssl_assert_hostname=False,  # Disable hostname verification if required
